@@ -1,88 +1,118 @@
 ---
 title: "Total Error: Using ML to Measure Total Exposure"
-author: "Gaurav"
-date: "06/17/2023"
-output: github_document
+author: "Gaurav Sood"
+output:
+  github_document:
+    html_preview: false
 ---
 
-To investigate the impact of small bias in ML measures on estimates of total number of visits, etc., we simulated some data. The code simulates a browsing data as follows. We start by randomly choosing the number of domains visited by a respondent. We randomly sample a number between 5 and a 1000. Second, we simulate a multivariate normal with covariance of .9 to create two columns and take one of the columns to reflect the true measure. To the yhat column, we add a small bias--- .1 of the standard deviation of the true measure.
-
-```{r}
-library(MASS)
-set.seed(1234)
-
-num_respondents <- 1000
-
-# Covariance matrix for var. and measure
-cov_matrix <- matrix(c(1, 0.9, 0.9, 1), nrow = 2)
-
-# Create an empty data frame to store the simulated data
-fin_data <- data.frame()
-
-# Generate data for each respondent
-for (i in 1:num_respondents) {
-  # Random number of rows for the current respondent
-  num_rows <- sample(5:1000, 1)
-  
-  # Generate data for the current respondent
-  data <- data.frame(
-    respondent_id = i,
-    # Generate variable1 and correlated1 from multivariate normal distribution
-    as.data.frame(mvrnorm(num_rows, mu = c(0, 0), Sigma = cov_matrix))
-  )
-  names(data) <- c("respondent_id", "y", "yhat")
-  data$yhat <- data$yhat + .1 * (sd(data$y))
-  
-  fin_data <- rbind(fin_data, data)
-}
-
-summary(fin_data)
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+source("sim_total_error.R")
+simulation <- simulate_exposure()
+write_results(simulation)
+results <- simulation$results
 ```
 
-Next, we create a summary data frame that creates measures at the respondent level. We create measures that capture the mean and the total. 
+Small systematic errors can distort totals when people contribute different
+numbers of observations. This notebook retains the June 2023 simulation's
+seed, random draws, and original bias specification, and adds two comparisons
+using the same draws. The underlying argument appears in the June 2020
+[Domain Knowledge manuscript](https://github.com/themains/domain_knowledge/blob/850644c06d19a3d787a444443472367dd1bd3046/ms/domain_knowledge.tex#L180-L200).
 
-```{r}
-library(dplyr)
+## Design
 
-# Group by respondent_id and calculate means and sums
-summary_data <- fin_data %>%
-  group_by(respondent_id) %>%
-  summarize(
-    mean_y = mean(y),
-    sum_y = sum(y),
-    nrows = n(),
-    mean_yhat = mean(yhat),
-    sum_yhat = sum(yhat),
-  )
+For each of 1,000 respondents, draw an observation count uniformly from the
+integers 5 through 1,000. Draw independent bivariate normal pairs with zero
+means, unit variances, and correlation 0.9. Let the first component be the
+true measure and the second an unbiased proxy. Compare three proxies:
+
+- No added bias.
+- A constant addition of 0.1 to every proxy observation.
+- The original addition of 0.1 times the respondent's sample standard deviation
+  of the true measure.
+
+The [R source](sim_total_error.R) generates the draws and summaries. These are
+continuous, centered measurements, not binary labels, visit counts, or durations.
+Each respondent has independent draws; the simulation does not reproduce the
+shared domain labels in browsing data. It isolates accumulation of bias.
+
+## Results
+
+```{r results}
+display <- results
+display$model <- c("No added bias", "Constant bias", "Original SD-scaled bias")
+knitr::kable(display, digits = 3, col.names = c(
+  "Proxy", "Observation correlation", "Mean correlation",
+  "Total correlation", "Mean total error"
+))
 ```
 
-Next, we check the consequences of bias on correlations. 
+In the original specification, the observation-level correlation is
+`r sprintf("%.3f", results$observation_correlation[3])` and the correlation of
+respondent totals is `r sprintf("%.3f", results$total_correlation[3])`.
+The mean signed error in totals (proxy minus truth) is
+`r sprintf("%.3f", results$mean_total_error[3])`.
+These are descriptive results from one seeded simulation, not estimates from
+observed browsing data.
 
-As you can see, the original correlation (in the long form) is .9. As expected, the correlation between the means for the aggregated data is unaffected. But the correlation between the sums (which tally some version of total visits) is dramatically lower.
+Adding the same constant to every observation leaves the correlations of
+observations and respondent means exactly unchanged. Totals acquire a shift
+proportional to the number of observations, which varies across respondents.
+The original SD-scaled addition is only approximately constant, so its
+mean correlation need not be exactly unchanged.
 
-```{r}
-with(fin_data, cor(y, yhat))
-with(summary_data, cor(mean_y, mean_yhat))
-with(summary_data, cor(sum_y, sum_yhat))
-```
+## Why the correlation falls in this design
 
-Part of the reason is that net bias is negatively correlated with the number of domains visited by the respondent.
+Let $N$ be independent of the zero-mean pairs $(Y, Z)$, each with unit
+variance and correlation $\rho$. Write $S=\sum_{r=1}^N Y_r$ and
+$\widehat S=\sum_{r=1}^N(Z_r+b)$. Then
 
-```{r}
-with(summary_data, cor(sum_y - sum_yhat, nrows))
-```
+$$
+\operatorname{Corr}(S,\widehat S)
+=\frac{\rho}{\sqrt{1+b^2\operatorname{Var}(N)/E[N]}}.
+$$
 
-The consequences for reporting raw numbers are yet clearer.
-```{r}
-summary(summary_data$sum_y)
-summary(summary_data$sum_yhat)
+For the constant-bias design, the population correlation is
+`r sprintf("%.3f", total_correlation(0.9, 0.1, 5:1000))`, compared with
+`r sprintf("%.3f", results$total_correlation[2])` in this finite simulation.
+If everyone contributes the same number of observations, the added bias
+does not change this correlation, although it still biases every total.
+The formula depends on the zero means and independence assumptions; it is
+not a universal description of exposure totals.
 
-summary(fin_data$y - fin_data$yhat)
-summary(summary_data$sum_y - summary_data$sum_yhat)
-```
+## Correction and its limits
 
-The solution for raw numbers is also clear:
+When the constant bias is known, subtracting $bN_i$ removes the added bias
+exactly. The original specification instead requires $0.1N_i s_i$, where
+$s_i$ is the respondent's sample standard deviation of the true measure.
+That is an oracle correction: the simulation supplies truth that would
+usually be unavailable in an application. Neither correction removes the
+remaining random prediction errors.
 
-```{r}
-summary(summary_data$sum_yhat - summary_data$nrows*(.1)) # can multiply with the sd(y)
+For binary domain labels, a different correction applies. Under common
+false-positive and false-negative probabilities $\alpha$ and $\beta$ that
+remain valid conditional on browsing weights, predicted exposure satisfies
+
+$$
+E[\widehat T_i\mid C,y]
+=\alpha V_i+(1-\alpha-\beta)T_i.
+$$
+
+Here $V_i$ is all visits and $T_i$ is visits to truly positive domains.
+Thus $(\widehat T_i-\alpha V_i)/(1-\alpha-\beta)$ is unbiased when the
+rates are known and their sum is not one. Estimating the rates adds uncertainty;
+transferring unweighted validation rates to browsing-weighted totals requires
+evidence. See the [note](total_error.pdf) for definitions, shared domain errors,
+and implications for group differences.
+
+## Reproduction
+
+Run `make check` to test the algebra, regenerate this document and the paper's
+numerical inputs, and compile the paper. The finite-enumeration tests check
+the binary correction and covariance without relying on Monte Carlo tolerances.
+
+```{r session, results='asis'}
+session <- trimws(capture.output(sessionInfo()), which = "right")
+cat("```text\n", paste(session, collapse = "\n"), "\n```\n", sep = "")
 ```

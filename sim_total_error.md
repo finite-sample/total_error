@@ -1,162 +1,136 @@
 Total Error: Using ML to Measure Total Exposure
 ================
-Gaurav
-06/17/2023
+Gaurav Sood
 
-To investigate the impact of small bias in ML measures on estimates of
-total number of visits, etc., we simulated some data. The code simulates
-a browsing data as follows. We start by randomly choosing the number of
-domains visited by a respondent. We randomly sample a number between 5
-and a 1000. Second, we simulate a multivariate normal with covariance of
-.9 to create two columns and take one of the columns to reflect the true
-measure. To the yhat column, we add a small bias— .1 of the standard
-deviation of the true measure.
+Small systematic errors can distort totals when people contribute
+different numbers of observations. This notebook retains the June 2023
+simulation’s seed, random draws, and original bias specification, and
+adds two comparisons using the same draws. The underlying argument
+appears in the June 2020 [Domain Knowledge
+manuscript](https://github.com/themains/domain_knowledge/blob/850644c06d19a3d787a444443472367dd1bd3046/ms/domain_knowledge.tex#L180-L200).
 
-``` r
-library(MASS)
-set.seed(1234)
+## Design
 
-num_respondents <- 1000
+For each of 1,000 respondents, draw an observation count uniformly from
+the integers 5 through 1,000. Draw independent bivariate normal pairs
+with zero means, unit variances, and correlation 0.9. Let the first
+component be the true measure and the second an unbiased proxy. Compare
+three proxies:
 
-# Covariance matrix for var. and measure
-cov_matrix <- matrix(c(1, 0.9, 0.9, 1), nrow = 2)
+- No added bias.
+- A constant addition of 0.1 to every proxy observation.
+- The original addition of 0.1 times the respondent’s sample standard
+  deviation of the true measure.
 
-# Create an empty data frame to store the simulated data
-fin_data <- data.frame()
+The [R source](sim_total_error.R) generates the draws and summaries.
+These are continuous, centered measurements, not binary labels, visit
+counts, or durations. Each respondent has independent draws; the
+simulation does not reproduce the shared domain labels in browsing data.
+It isolates accumulation of bias.
 
-# Generate data for each respondent
-for (i in 1:num_respondents) {
-  # Random number of rows for the current respondent
-  num_rows <- sample(5:1000, 1)
-  
-  # Generate data for the current respondent
-  data <- data.frame(
-    respondent_id = i,
-    # Generate variable1 and correlated1 from multivariate normal distribution
-    as.data.frame(mvrnorm(num_rows, mu = c(0, 0), Sigma = cov_matrix))
-  )
-  names(data) <- c("respondent_id", "y", "yhat")
-  data$yhat <- data$yhat + .1 * (sd(data$y))
-  
-  fin_data <- rbind(fin_data, data)
-}
-
-summary(fin_data)
-```
-
-    ##  respondent_id          y                  yhat        
-    ##  Min.   :   1.0   Min.   :-4.532658   Min.   :-4.9175  
-    ##  1st Qu.: 256.0   1st Qu.:-0.676484   1st Qu.:-0.5767  
-    ##  Median : 507.0   Median :-0.001690   Median : 0.0986  
-    ##  Mean   : 504.3   Mean   :-0.000216   Mean   : 0.1001  
-    ##  3rd Qu.: 756.0   3rd Qu.: 0.674746   3rd Qu.: 0.7748  
-    ##  Max.   :1000.0   Max.   : 5.164210   Max.   : 5.0277
-
-Next, we create a summary data frame that creates measures at the
-respondent level. We create measures that capture the mean and the
-total.
+## Results
 
 ``` r
-library(dplyr)
+display <- results
+display$model <- c("No added bias", "Constant bias", "Original SD-scaled bias")
+knitr::kable(display, digits = 3, col.names = c(
+  "Proxy", "Observation correlation", "Mean correlation",
+  "Total correlation", "Mean total error"
+))
 ```
 
-    ## 
-    ## Attaching package: 'dplyr'
+| Proxy | Observation correlation | Mean correlation | Total correlation | Mean total error |
+|:---|---:|---:|---:|---:|
+| No added bias | 0.9 | 0.903 | 0.893 | 0.139 |
+| Constant bias | 0.9 | 0.903 | 0.537 | 51.236 |
+| Original SD-scaled bias | 0.9 | 0.901 | 0.538 | 51.239 |
 
-    ## The following object is masked from 'package:MASS':
-    ## 
-    ##     select
+In the original specification, the observation-level correlation is
+0.900 and the correlation of respondent totals is 0.538. The mean signed
+error in totals (proxy minus truth) is 51.239. These are descriptive
+results from one seeded simulation, not estimates from observed browsing
+data.
 
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     filter, lag
+Adding the same constant to every observation leaves the correlations of
+observations and respondent means exactly unchanged. Totals acquire a
+shift proportional to the number of observations, which varies across
+respondents. The original SD-scaled addition is only approximately
+constant, so its mean correlation need not be exactly unchanged.
 
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     intersect, setdiff, setequal, union
+## Why the correlation falls in this design
+
+Let $N$ be independent of the zero-mean pairs $(Y, Z)$, each with unit
+variance and correlation $\rho$. Write $S=\sum_{r=1}^N Y_r$ and
+$\widehat S=\sum_{r=1}^N(Z_r+b)$. Then
+
+$$\operatorname{Corr}(S,\widehat S)
+=\frac{\rho}{\sqrt{1+b^2\operatorname{Var}(N)/E[N]}}.$$
+
+For the constant-bias design, the population correlation is 0.553,
+compared with 0.537 in this finite simulation. If everyone contributes
+the same number of observations, the added bias does not change this
+correlation, although it still biases every total. The formula depends
+on the zero means and independence assumptions; it is not a universal
+description of exposure totals.
+
+## Correction and its limits
+
+When the constant bias is known, subtracting $bN_i$ removes the added
+bias exactly. The original specification instead requires $0.1N_i s_i$,
+where $s_i$ is the respondent’s sample standard deviation of the true
+measure. That is an oracle correction: the simulation supplies truth
+that would usually be unavailable in an application. Neither correction
+removes the remaining random prediction errors.
+
+For binary domain labels, a different correction applies. Under common
+false-positive and false-negative probabilities $\alpha$ and $\beta$
+that remain valid conditional on browsing weights, predicted exposure
+satisfies
+
+$$E[\widehat T_i\mid C,y]
+=\alpha V_i+(1-\alpha-\beta)T_i.$$
+
+Here $V_i$ is all visits and $T_i$ is visits to truly positive domains.
+Thus $(\widehat T_i-\alpha V_i)/(1-\alpha-\beta)$ is unbiased when the
+rates are known and their sum is not one. Estimating the rates adds
+uncertainty; transferring unweighted validation rates to
+browsing-weighted totals requires evidence. See the
+[note](total_error.pdf) for definitions, shared domain errors, and
+implications for group differences.
+
+## Reproduction
+
+Run `make check` to test the algebra, regenerate this document and the
+paper’s numerical inputs, and compile the paper. The finite-enumeration
+tests check the binary correction and covariance without relying on
+Monte Carlo tolerances.
 
 ``` r
-# Group by respondent_id and calculate means and sums
-summary_data <- fin_data %>%
-  group_by(respondent_id) %>%
-  summarize(
-    mean_y = mean(y),
-    sum_y = sum(y),
-    nrows = n(),
-    mean_yhat = mean(yhat),
-    sum_yhat = sum(yhat),
-  )
+session <- trimws(capture.output(sessionInfo()), which = "right")
+cat("```text\n", paste(session, collapse = "\n"), "\n```\n", sep = "")
 ```
 
-Next, we check the consequences of bias on correlations.
+``` text
+R version 4.6.0 (2026-04-24)
+Platform: aarch64-apple-darwin23
+Running under: macOS 27.0.1
 
-As you can see, the original correlation (in the long form) is .9. As
-expected, the correlation for the aggregated data is also unaffected.
-But the correlation between the sums (which tally some version of total
-visits) is dramatically lower.
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
 
-``` r
-with(fin_data, cor(y, yhat))
+locale:
+[1] C.UTF-8/C.UTF-8/C.UTF-8/C/C.UTF-8/C.UTF-8
+
+time zone: America/Los_Angeles
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base
+
+loaded via a namespace (and not attached):
+ [1] MASS_7.3-65     compiler_4.6.0  fastmap_1.2.0   cli_3.6.6
+ [5] tools_4.6.0     htmltools_0.5.9 otel_0.2.0      yaml_2.3.12
+ [9] rmarkdown_2.32  knitr_1.51      xfun_0.59       digest_0.6.39
+[13] rlang_1.3.0     evaluate_1.0.5
 ```
-
-    ## [1] 0.9000409
-
-``` r
-with(summary_data, cor(mean_y, mean_yhat))
-```
-
-    ## [1] 0.9006167
-
-``` r
-with(summary_data, cor(sum_y, sum_yhat))
-```
-
-    ## [1] 0.5383029
-
-Part of the reason is that net bias is negatively correlated with the
-number of domains visited by the respondent.
-
-``` r
-with(summary_data, cor(sum_y - sum_yhat, nrows))
-```
-
-    ## [1] -0.9397464
-
-The consequences for reporting raw numbers are yet clearer.
-
-``` r
-summary(summary_data$sum_y)
-```
-
-    ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
-    ## -89.9745 -12.8248   0.5104  -0.1106  13.5700  83.5562
-
-``` r
-summary(summary_data$sum_yhat)
-```
-
-    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##  -28.64   20.02   48.34   51.13   76.09  184.43
-
-``` r
-summary(fin_data$y - fin_data$yhat)
-```
-
-    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ## -2.2504 -0.4024 -0.1003 -0.1003  0.2027  1.8752
-
-``` r
-summary(summary_data$sum_y - summary_data$sum_yhat)
-```
-
-    ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
-    ## -126.922  -74.645  -52.051  -51.239  -25.764    2.216
-
-The solution for raw numbers is also clear:
-
-``` r
-summary(summary_data$sum_yhat - summary_data$nrows*(.1)) # can multiply with the sd(y)
-```
-
-    ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
-    ## -86.43527 -11.73254   0.00754   0.03092  13.08083  88.82867
