@@ -71,6 +71,32 @@ assert_equal(
   visits %*% sigma %*% t(visits)
 )
 
+# Distinct domains can transmit the same error shock to disjoint users.
+disjoint_visits <- diag(3)
+disjoint_errors <- entity_error %*% t(disjoint_visits)
+disjoint_centered <- sweep(
+  disjoint_errors, 2,
+  drop(crossprod(joint_mass, disjoint_errors))
+)
+disjoint_covariance <- crossprod(
+  disjoint_centered,
+  disjoint_centered * joint_mass
+)
+assert_equal(disjoint_covariance, sigma)
+stopifnot(disjoint_covariance[1, 2] > 0)
+for (family_weights in list(c(1, 1, 1), c(1, -1, 0))) {
+  contrast_error <- drop(entity_error %*% family_weights)
+  centered_contrast <- contrast_error - sum(joint_mass * contrast_error)
+  exact_variance <- sum(joint_mass * centered_contrast^2)
+  assert_equal(exact_variance, 0.4 * 0.6 * sum(family_weights)^2)
+  contrast_bias <- sum(family_weights * entity_mean)
+  assert_equal(
+    sum(joint_mass * contrast_error^2),
+    contrast_bias^2 + exact_variance
+  )
+}
+assert_equal(sum(sigma), 3 * sum(diag(sigma)))
+
 # Enumerate label samples for the frozen-proxy difference estimator.
 inclusion <- c(0.4, 1, 0.6)
 proxy <- c(0.8, 0.3, 0.9)

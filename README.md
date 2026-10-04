@@ -1,17 +1,17 @@
 # Total Error: What Classifier Validation Establishes About Exposure Comparisons
 
-Small errors in domain labels can become large errors in people's total online
-exposure. A domain's label is reused for every visit and every user, so mistakes
-affect both bias and standard errors. Domain-level accuracy alone does not tell
-us how well we measure totals, group differences, or regression coefficients.
+Start with the research quantity: a person's exposure, a difference between
+groups, or a regression coefficient. For a user comparison with weights `a` and
+a browsing matrix `C`, the target is `θ = a'Cy = w'y`, where `w = C'a` gives the
+domain weights. Exposure shares first normalize the rows of `C`; regression
+coefficients supply `a` from the fixed design matrix.
 
-Let `C` contain user-by-domain visits, and let `e` contain domain prediction
-errors. The error in user totals is `Ce`. Conditional on the browsing matrix
-and true labels, its expected value is `Cb` and its covariance is `C Σ C'`,
-where `b` and `Σ` are the mean and covariance of the domain errors under a
-specified prediction-error process. For a comparison with user weights `a`,
-the relevant domain weights are `w = C'a`: its bias is `w'b` and its variance
-is `w'Σw`.
+If `e` contains domain prediction errors, the comparison's error is `w'e`.
+Under a stated prediction-error process, its bias is `w'b`, its variance is
+`w'Σw`, and its mean squared error is `(w'b)² + w'Σw`. The full covariance `Σ`
+allows errors across domains to be correlated. Shared classifier failures can
+therefore link even users who visit different sites. Reusing one label across
+many visits creates an additional source of dependence across users.
 
 The [paper](ms/main.pdf) characterizes the sharp range of a comparison given
 exact confusion counts and shows when those counts suffice. It distinguishes
@@ -24,10 +24,9 @@ established quantification, survey-sampling, and statistical-auditing tools.
 The bundled browsing benchmark includes seven scanner outcomes, twelve demographic
 coefficients, visit totals and shares, and three imposed error fractions. It is a
 stress test with deliberately generated mistakes, not an evaluation of a trained
-classifier. A prespecified contrast compares three audit intervals on common
+classifier. One contrast compares three audit intervals on common
 samples. The [data documentation](data/README.md) states the analytic frame,
 transformations, redistribution provenance, and limits of the reference labels.
-The [research plan](docs/research_plan.md) records choices and development history.
 
 The [historical simulation](docs/sim_total_error.md) retains the original continuous-data
 example. Exact finite-enumeration tests verify binary-label propagation, sharp
@@ -78,12 +77,11 @@ See also: [Gathering Domain Knowledge](https://gojiberries.io/2022/05/15/gatheri
 | `data/` | Bundled inputs, provenance, and `results/` analysis outputs |
 | `tabs/` | Generated LaTeX tables and numerical macros |
 | `figs/` | Generated research figures |
-| `docs/` | Research plan, historical simulation report, and bibliography audit |
+| `docs/` | Historical simulation report and R session information |
 | `tests/` | Exact mathematical and implementation checks |
 
 LaTeX intermediates stay in ignored `ms/build/`. The root contains project
-configuration and this README. Bibliographic source checks are recorded in
-[the validation log](docs/bibliography_validation.md).
+configuration and this README.
 
 ## Reproduce
 
@@ -102,7 +100,7 @@ make check
 This verifies bundled data hashes, runs all exact mathematical tests and R linting,
 regenerates both benchmark studies (1,000 audit repetitions per design), the exact
 rare-error example, all numerical LaTeX inputs and figures, and the historical
-simulation, then validates every bibliography entry, compiles the PDF, and checks
+simulation, then checks bibliography syntax, compiles the PDF, and checks
 whitespace. No sibling repository, network data download, or fitted model is
 required. Run from the repository root.
 
@@ -124,7 +122,7 @@ they are distinct from the intervals being evaluated. The recorded R session giv
 the tested dependency versions. Exact bitwise equality across R versions is not
 promised; the mathematical tests check the substantive identities and guarantees.
 
-A declared follow-up refines validation strata by signed influence at a fixed audit
+An additional analysis refines validation strata by signed influence at a fixed audit
 budget. It distinguishes ambiguity with exactly known counts from uncertainty
 when those counts must be estimated. The normal-interval illustration is limited
 to one outcome and imposed prediction vector. The paper does not claim that count

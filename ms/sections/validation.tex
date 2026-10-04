@@ -1,11 +1,10 @@
 \section{What a confusion matrix identifies}\label{sec:identification}
 A confusion matrix can be exactly correct for the target domains and still fail
 to determine a user comparison. This is an information problem before it is a
-sampling problem. Fix predictions $q_j=\widehat y_j$, and let
-$\theta=\sum_j w_jy_j$ be a comparison with known domain weights.
-For a user contrast $a^{\mathsf T}T$, $w=C^{\mathsf T}a$; a least-squares
-coefficient is another such contrast when the regressors are fixed.
-The prediction-based comparison is $\widehat\theta=\sum_jw_jq_j$.
+sampling problem. Fix the predictions $q$ and the domain weights $w$ induced
+by the estimand in equation~\eqref{eq:estimand}. We now ask what a validation
+summary establishes about the fixed target $\theta=w^{\mathsf T}y$, without
+specifying a stochastic model for how the classifier's mistakes were generated.
 
 Let $P=\{j:q_j=1\}$ and $N=\{j:q_j=0\}$. Suppose the entire target-population
 confusion matrix is known: $f$ predictions in $P$ are false positives and $g$
@@ -46,7 +45,8 @@ arbitrarily close to one without resolving the comparison. These are domains
 that can affect individual exposure but cancel from the chosen contrast.
 
 \begin{proposition}[When counts suffice]\label{prop:sufficient}
-In a stratum of $M$ predicted labels with exactly $m$ errors, the error sum is
+In a stratum of $M$ domains sharing the same predicted label, with exactly
+$m$ errors, the error sum is
 point identified if and only if $m\in\{0,M\}$ or all its contrast weights are
 equal. Its identification width obeys
 \begin{equation}\label{eq:dispersion}
@@ -65,6 +65,8 @@ The difference between two sums of $m$ terms is at most $m$ times the range.
 Taking complements gives the corresponding bound with $M-m$ terms. The
 vector statement applies the exchange argument to each coordinate.
 \end{proof}
+For a stratum mixing predicted labels, the corresponding criterion applies to
+the signed contributions $(2q_j-1)w_j$, not to $w_j$ alone.
 The result specifies what a finer validation table must preserve. Stratifying
 by predicted label alone is sufficient only when the contrast attaches equal
 weights within each partially erroneous stratum. Partitioning domains by
@@ -127,7 +129,9 @@ are independent restrictions across strata and hence jointly attainable.
 The true label vector lies in the same configuration set for every choice of
 $w$, which establishes simultaneous coverage.
 \end{proof}
-Coverage is over repeated audit samples, not conditional on the realized
+The labels and predictions are fixed under this design: systematic or correlated
+classifier mistakes do not invalidate the guarantee. Coverage is over repeated
+audit samples, not conditional on the realized
 sampled identities. It requires neither independent classification errors nor
 a large-domain Gaussian approximation. The count confidence region can be
 conservative, and sharp projection of that region does not make the resulting

@@ -30,7 +30,8 @@ and develops the validation bounds and inference results. Code and history:
 \begin{abstract}
 A classifier's confusion matrix need not validate comparisons constructed from
 its predictions. When domain labels are reused across browsing histories, the
-relevant error is a signed, weighted sum of domain mistakes. I characterize the
+estimand determines a signed, weighted sum of domain mistakes. Its bias and
+variance depend on the full joint error distribution across domains. I characterize the
 sharp bounds on this error given exact target-population confusion counts and
 show when those counts identify a comparison. The decisive restriction is
 constant influence within each partially erroneous stratum. A finite-population
@@ -48,9 +49,9 @@ to compare exposure across demographic groups. An accurate classifier seems
 to provide reassurance. Yet accuracy counts domains equally, whereas each
 comparison attaches its own signed weights to the same labels. A mistake on
 a domain visited disproportionately by one group can matter more than many
-correct labels elsewhere. Because users share domains, the same mistakes also
-create dependent measurement errors. Both bias and uncertainty depend on where
-errors occur.
+correct labels elsewhere. Because users share labels and different domains can share classifier
+failures, measurement errors can be dependent even between users who visit
+different sites. Both bias and uncertainty depend on where errors occur.
 
 This note asks what even an exactly known target-population confusion matrix
 establishes about such comparisons. The answer is a sharp identification
@@ -76,101 +77,133 @@ difference estimator is a new result here. The contribution is the explicit
 characterization of what confusion summaries retain for reused labels, its
 limits for auditing, and a reproducible assessment on exposure comparisons.
 
-\section{From domain labels to exposure}
-Let $i=1,\ldots,n$ index users and $j=1,\ldots,k$ index domains. Let $c_{ij}\geq0$
-be visits by user $i$ to domain $j$, $y_j\in\{0,1\}$ the true domain label, and
-$\widehat y_j\in\{0,1\}$ the predicted label. Define
-\begin{equation}
- T_i=\sum_j c_{ij}y_j,\qquad
- \widehat T_i=\sum_j c_{ij}\widehat y_j,\qquad
- V_i=\sum_j c_{ij},\qquad
- D_i=\sum_j\mathbf{1}\{c_{ij}>0\}.
+\section{Start with the estimand}\label{sec:estimand}
+Suppose the research question concerns a difference in exposure between two
+groups, or a demographic coefficient in a regression of exposure. Define that
+quantity before assessing the classifier. Let $C=(c_{ij})$ contain visits by
+$n$ users to $k$ domains, and let $y_j\in\{0,1\}$ be domain $j$'s true label.
+The true exposure vector is $T=Cy$. For declared user weights $a$, the estimand is
+\begin{equation}\label{eq:estimand}
+ \theta=a^{\mathsf T}T=a^{\mathsf T}Cy=w^{\mathsf T}y,
+ \qquad w=C^{\mathsf T}a.
 \end{equation}
-$T_i$ counts visits to positive domains; $V_i$ counts all visits; $D_i$ counts
-distinct visited domains. Replacing visits by duration changes the unit to time
-and leaves the algebra unchanged. These quantities measure exposure to domains
-with a given label. They do not establish which pages or content a person
-consumes on a domain that hosts several kinds of content.
-
-Write $e_j=\widehat y_j-y_j$, let $C$ be the matrix of browsing weights, and let
-$d=\widehat T-T$. The exact measurement-error identity is
-\begin{equation}\label{eq:identity}
- d=Ce,\qquad d_i=\sum_j c_{ij}e_j.
-\end{equation}
-The same $e_j$ enters every user who visits domain $j$. Repeated visits multiply
-one error; they are not independent opportunities to classify the domain again.
-
-For expectations and variances, fix $C$ and $y$ and posit repeated prediction
-errors, such as those induced by repeated training samples or a specified error
-model. Let $b=\E[e\mid C,y]$ and $\Sigma=\Cov(e\mid C,y)$. Then
-\begin{equation}\label{eq:moments}
- \E[d\mid C,y]=Cb,\qquad \Cov(d\mid C,y)=C\Sigma C^{\mathsf T}.
-\end{equation}
-For a fixed fitted classifier and fixed population, $d$ is fixed. A standard
-error requires a stated source of randomness. Equations~\eqref{eq:moments}
-describe uncertainty from the specified prediction-error process; they do not
-include user sampling, browsing-log error, or uncertainty about the construct.
-
-\input{sections/validation}
-
-\section{Shared errors and standard errors}
-If prediction errors are independent across domains conditional on $C,y$, let
-$v_j=\Var(e_j\mid C,y)$. Equation~\eqref{eq:moments} becomes
-\begin{equation}\label{eq:covariance}
- \Var(d_i\mid C,y)=\sum_j c_{ij}^2v_j,\qquad
- \Cov(d_i,d_\ell\mid C,y)=\sum_j c_{ij}c_{\ell j}v_j.
-\end{equation}
-Let $\alpha_j$ denote the false-positive probability on a truly negative
-domain and $\beta_j$ the false-negative probability on a truly positive domain.
-For binary predictions,
-$v_j=\alpha_j(1-\alpha_j)$ on negative domains and
-$v_j=\beta_j(1-\beta_j)$ on positive domains. Variance depends on squared
-visits. Treating repeated visits as independent would replace these squared
-weights by visit counts and miss the repeated use of the same label.
-Different users have correlated errors whenever they share uncertain domains.
-Errors across domains may also be correlated, for example through a shared
-training sample; then the full $\Sigma$ in equation~\eqref{eq:moments} is needed.
-
-Let a comparison be $\theta=a^{\mathsf T}T$ for fixed user weights $a$.
 For a difference of group means, $a_i=1/n_A$ in group $A$ and $a_i=-1/n_B$
-in group $B$. Set $w=C^{\mathsf T}a$, the domain weights induced by the
-comparison. Then
+in group $B$. A single user's total sets that user's weight to one and all
+others to zero. For exposure shares, first replace $C$ by
+$\operatorname{diag}(V_1^{-1},\ldots,V_n^{-1})C$, where $V_i=\sum_jc_{ij}>0$;
+the same mapping then gives the domain weights for the chosen share comparison.
+Replacing visits by duration changes the exposure unit but not the mapping.
+
+Regression coefficients are also fixed linear functionals of the labels.
+For a full-rank demographic design $X$, write
+$A=(X^{\mathsf T}X)^{-1}X^{\mathsf T}$ and define the complete-label coefficient
+$\beta^*=ACy$. A coefficient contrast $r^{\mathsf T}\beta^*$ has user weights
+$a=A^{\mathsf T}r$ and domain weights $w=C^{\mathsf T}A^{\mathsf T}r$.
+These are descriptive coefficients for the specified browsing frame; causal or
+population interpretations require additional assumptions. Throughout, the
+browsing matrix, comparison weights, and regressors are fixed. Their uncertainty,
+if relevant to the research question, requires an additional sampling model.
+Domain labels also define the construct: they measure visits to domains with a
+given label, not necessarily consumption of that content on mixed-content sites.
+
+Let $q\in\{0,1\}^k$ contain predicted labels, $q_j=\widehat y_j$, and let
+$e=q-y$. The predicted exposure vector is $\widehat T=Cq$. The predicted
+comparison is $\widehat\theta=w^{\mathsf T}q$, so its error is exactly
 \begin{equation}\label{eq:contrast}
- \widehat\theta-\theta=w^{\mathsf T}e,\qquad
- \operatorname{Bias}(\widehat\theta\mid C,y)=w^{\mathsf T}b,\qquad
- \Var(\widehat\theta-\theta\mid C,y)=w^{\mathsf T}\Sigma w.
+ \Delta=\widehat\theta-\theta=w^{\mathsf T}e.
 \end{equation}
-A popular domain can contribute large errors to individual totals yet cancel
-from a group contrast when the groups have identical average usage of it.
-Conversely, an uncertain domain visited mostly by one group can dominate the
-comparison. Bias and variance must therefore be assessed for the intended
-contrast, not inferred from overall domain accuracy. Dropping covariance
-terms can raise or lower a contrast's variance: shared errors may reinforce
-within groups and cancel between them.
+Thus it is the estimand that determines which classification mistakes matter.
+A popular domain can dominate an individual's total but cancel from a group
+comparison if the groups use it equally. Conversely, a less popular domain
+visited disproportionately by one group can be influential for that comparison.
+An error rate that weights all domains equally need not describe either target.
 
-For a full-rank, fixed regressor matrix $X$, consider the least-squares
-coefficient that would be obtained using the true exposure outcome $T$.
-Writing $A=(X^{\mathsf T}X)^{-1}X^{\mathsf T}$, prediction changes that
-coefficient by $ACe$. Its conditional bias is $ACb$ and its additional
-measurement-error covariance is
-\begin{equation}\label{eq:regression}
- AC\Sigma C^{\mathsf T}A^{\mathsf T}.
+For a fixed fitted classifier and fixed labels, $\Delta$ is fixed. To discuss
+bias and variance, specify a repeated-prediction process, such as repeated
+training samples, while fixing $C,y,a$ and, where used, $X,r$. All moments below
+condition on this fixed design. Define $b=\E[e]$ and the full joint covariance
+$\Sigma=\Cov(e)$, without assuming independence across domains. Then
+\begin{align}
+ \operatorname{Bias}(\widehat\theta)&=w^{\mathsf T}b,\notag\\
+ \Var(\Delta)&=w^{\mathsf T}\Sigma w
+ =\sum_jw_j^2\Sigma_{jj}
+   +2\sum_{j<\ell}w_jw_\ell\Sigma_{j\ell},\label{eq:targetmoments}\\
+ \E[\Delta^2]&=(w^{\mathsf T}b)^2+w^{\mathsf T}\Sigma w.
+ \label{eq:targetrisk}
+\end{align}
+Equations~\eqref{eq:estimand}--\eqref{eq:targetrisk} connect the research quantity
+to its domain weights, its systematic error, and its uncertainty. Covariance
+between domain errors is part of the estimand's error from the outset.
+Dependence alone does not determine bias; systematically misclassifying domain
+types used disproportionately by one group can make $w^{\mathsf T}b$ nonzero.
+
+User totals and regression vectors are corresponding joint quantities. Writing
+$d=\widehat T-T$ and $\widehat\beta=ACq$ gives
+\begin{align}
+ d&=Ce,\label{eq:identity}\\
+ \E[d]&=Cb, & \Cov(d)&=C\Sigma C^{\mathsf T},\label{eq:moments}\\
+ \E[\widehat\beta-\beta^*]&=ACb,
+ &\Cov(\widehat\beta-\beta^*)&=AC\Sigma C^{\mathsf T}A^{\mathsf T}.
+ \label{eq:regression}
+\end{align}
+The same domain error is reused across all visits and users. These formulas
+quantify the specified prediction-error process; they do not include browsing-log
+error, user sampling, or uncertainty about the construct. They concern predicted
+exposure as an outcome. Noisy exposure as a regressor is a different
+errors-in-variables problem \citep{fong2021predictions}.
+
+\section{Dependence follows the domain weights}\label{sec:dependence}
+There are two sources of dependence. A domain's label is reused across users,
+and different domains are classified by the same fitted model. Shared training
+data, model parameters, and similar content or site templates can cause errors
+to move together under repeated fitting. Distinct domain names do not establish
+independent errors. Users need not visit the same domains to have correlated
+measurement errors: visiting different domains whose errors covary is enough.
+In equation~\eqref{eq:targetmoments}, positively correlated mistakes increase
+variance when their domain weights have the same sign, and decrease it when
+the weights have opposite signs.
+
+For a limiting example, suppose centered errors are shared within domain
+families: $e_j-b_j=u_{g(j)}$, with independent family shocks $u_g$ of variance
+$\tau_g^2$. This is compatible with binary predictions when the classifier
+assigns one common random prediction to every domain in a family. Then
+\begin{equation}\label{eq:families}
+ \Var(\Delta)=\sum_g\tau_g^2
+                 \left(\sum_{j:g(j)=g}w_j\right)^2.
 \end{equation}
-Mean-zero measurement error can therefore affect standard errors even when it
-does not bias the coefficient. Systematic error associated with regressors
-can affect both. This statement concerns exposure as an outcome; using noisy
-exposure as a regressor is a different errors-in-variables problem
-\citep{fong2021predictions}.
+A family of $m$ domains with unit weights contributes $m^2\tau_g^2$, whereas
+assuming independent domain errors would give $m\tau_g^2$. Signed weights can
+instead cancel within a family. The relevant concentration is in aggregate
+family influence, not just individual domain influence. This example is a
+special covariance structure, not an assertion that the right families are
+known or that all within-family mistakes are perfectly correlated.
 
-These expressions quantify the prediction-error component of uncertainty.
-They cannot simply be added to an arbitrary reported regression covariance:
-the components may overlap or be dependent. A combined analysis must specify
-sampling and prediction jointly. Resampling users while holding predicted
-labels fixed omits repeated-training uncertainty. To propagate domain-label
-uncertainty, each replicate must use one common label draw per domain for all
-users, retaining cross-domain dependence where required. Neither larger user
-samples nor user-level clustering alone guarantees that this component vanishes.
-Standard errors also do not repair systematic bias.
+Independent domain errors are another special case: $\Sigma$ is diagonal,
+with entries $v_j$. For user totals, equation~\eqref{eq:moments} reduces to
+\begin{equation}\label{eq:covariance}
+ \Var(d_i)=\sum_jc_{ij}^2v_j,\qquad
+ \Cov(d_i,d_\ell)=\sum_jc_{ij}c_{\ell j}v_j.
+\end{equation}
+Let $\alpha_j$ be the false-positive probability on a truly negative domain
+and $\beta_j$ the false-negative probability on a truly positive domain.
+For binary predictions, $v_j=\alpha_j(1-\alpha_j)$ on negative domains and
+$v_j=\beta_j(1-\beta_j)$ on positive domains. Repeated visits multiply one
+classification error; treating visits as independent would incorrectly replace
+squared visit weights by visit counts. Even this special case induces dependence
+across users who share uncertain domains.
+
+An uncertainty procedure must follow the same structure as the estimand.
+Resampling users while holding predictions fixed does not propagate repeated-
+training uncertainty. Each replicate must preserve shared labels across users
+and the joint distribution of errors across domains. Independently perturbing
+each domain label imposes a diagonal $\Sigma$; resampling the classifier fit
+and predicting all domains together can preserve dependence induced by that
+fitting process, provided the resampling scheme represents that process.
+A prediction-error covariance cannot simply be added to an arbitrary reported
+regression covariance: the components may overlap or be dependent. Neither
+larger user samples nor user-level clustering alone guarantees that this error
+disappears,
+and standard errors do not repair bias.
 
 \subsection{Many domains do not ensure a normal approximation}
 Even with independent domain errors, diffuse variance shares alone do not
@@ -190,6 +223,8 @@ $\max_j w_j^2v_j/\sum_jw_j^2v_j$ is weaker when errors become rare. The example
 violates the former condition and satisfies the latter. A growing number of
 domains cannot substitute for a condition on the distribution of their errors.
 This is a prediction-error example, distinct from the fixed-label audit design.
+
+\input{sections/validation}
 
 \input{sections/benchmark}
 
@@ -217,10 +252,11 @@ interpretation is distinct from the repeated-prediction interpretation used
 above; an uncertainty calculation must choose and state its target.
 
 Validation should match the research quantity. For individual totals, large
-$c_{ij}$ magnify label errors. For a particular contrast under independent
-domain errors, the variance contribution is $w_j^2v_j$ and the bias contribution
-is $w_jb_j$. Those quantities can guide a labeling audit more directly than
-domain frequency alone. Verified labels for influential domains eliminate their
+$c_{ij}$ magnify label errors. For a contrast, the relevant quantities are
+$w^{\mathsf T}b$ and $w^{\mathsf T}\Sigma w$. Only under independent domain
+errors does variance reduce to separate contributions $w_j^2v_j$; otherwise
+validation must also address which influential errors move together. These
+quantities can guide a labeling audit more directly than domain frequency alone. Verified labels for influential domains eliminate their
 classification error if those labels are correct. Usage-weighted training is
 another option, but its effect on exposure error requires validation; concentrated
 weights do not by themselves establish that model performance will worsen.
@@ -257,8 +293,8 @@ bias scales with browsing volume unless the expression in braces is zero.
 For $\alpha+\beta>0$, cancellation occurs at
 $\pi_i=\alpha/(\alpha+\beta)$. Equal positive error rates cancel only when
 half of visits are to truly positive domains. Thus the difference between
-FPR and FNR alone does not determine bias. Nor does $D_i$ alone: repeated
-visits matter through $c_{ij}$.
+FPR and FNR alone does not determine bias. Nor does the number of distinct
+visited domains: repeated visits matter through $c_{ij}$.
 
 The common-rate assumption is stronger than knowing an average error rate on a
 validation set of domains. Errors may depend on popularity, domain type, or
@@ -304,10 +340,11 @@ it is distinct from the prediction-error process in equation~\eqref{eq:moments}.
 Both calculations preserve the reuse of a domain label across people.
 
 
+\clearpage
 \section{Full audit comparison}\label{app:audit}
-\begin{table}[htbp]
+\begin{table}[!h]
 \centering\small
-\caption{All audit designs and methods for the prespecified coefficient}
+\caption{All audit designs and methods for the focal coefficient}
 \input{../tabs/audit_table}
 \par\smallskip
 \begin{minipage}{\linewidth}\footnotesize
