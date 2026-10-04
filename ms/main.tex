@@ -267,7 +267,25 @@ influence of large weights but changes the exposure quantity being estimated.
 The most useful validation reports errors in totals and in the intended
 comparisons, together with uncertainty that preserves the common domain labels.
 
+\clearpage
+\begingroup
+\small
+\setlength{\bibsep}{3pt}
+\urlstyle{same}
+\raggedright
+\bibliographystyle{plainnat}
+\bibliography{references}
+\endgroup
+
+\clearpage
 \appendix
+\counterwithin{table}{section}
+\counterwithin{figure}{section}
+\counterwithin{equation}{section}
+\renewcommand{\thetable}{\thesection\arabic{table}}
+\renewcommand{\thefigure}{\thesection\arabic{figure}}
+\renewcommand{\theequation}{\thesection\arabic{equation}}
+\section*{Appendix}
 \section{Bias and the denominators of error rates}\label{app:rates}
 Let $\alpha_j$ be the probability of predicting one for a truly negative domain
 and $\beta_j$ the probability of predicting zero for a truly positive domain,
@@ -340,7 +358,6 @@ it is distinct from the prediction-error process in equation~\eqref{eq:moments}.
 Both calculations preserve the reuse of a domain label across people.
 
 
-\clearpage
 \section{Full audit comparison}\label{app:audit}
 \begin{table}[!h]
 \centering\small
@@ -412,13 +429,4 @@ independently across respondents and does not simulate shared domain errors.
 The covariance results above follow from the domain formulation, and are checked
 separately by enumerating all prediction vectors in a small binary example.
 
-\clearpage
-\begingroup
-\small
-\setlength{\bibsep}{3pt}
-\urlstyle{same}
-\raggedright
-\bibliographystyle{plainnat}
-\bibliography{references}
-\endgroup
 \end{document}
