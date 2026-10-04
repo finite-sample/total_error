@@ -1,6 +1,6 @@
 source("R/audit_bounds.R")
 source("R/browsing_data.R")
-source("analysis/verify_data.R")
+source("scripts/verify_data.R")
 set.seed(20261004)
 panel <- read_browsing()
 results <- list()
@@ -45,15 +45,15 @@ for (outcome in colnames(panel$labels)) {
 }
 results <- do.call(rbind, results)
 rownames(results) <- NULL
-dir.create("results", showWarnings = FALSE)
-write.csv(results, "results/browsing_bounds.csv", row.names = FALSE)
+dir.create("data/results", showWarnings = FALSE)
+write.csv(results, "data/results/browsing_bounds.csv", row.names = FALSE)
 metadata <- data.frame(
   users = nrow(panel$design), domains = nrow(panel$labels),
   records = length(panel$counts@x), visits = sum(panel$counts),
   coefficients = ncol(panel$design) - 1, outcomes = ncol(panel$labels),
   seed = 20261004
 )
-write.csv(metadata, "results/browsing_metadata.csv", row.names = FALSE)
+write.csv(metadata, "data/results/browsing_metadata.csv", row.names = FALSE)
 print(aggregate(
   cbind(sign_certified, reversal_possible) ~ scale + error_fraction,
   results, mean

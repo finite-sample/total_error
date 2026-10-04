@@ -6,7 +6,7 @@ was not available from GitHub when checked. The author authorized redistribution
 in this package on October 4, 2026; reproduction uses these bundled files and
 does not require access to the original branch or another repository.
 `manifest.csv` records SHA-256 hashes and the source commit.
-`Rscript analysis/verify_data.R` checks file integrity.
+`Rscript scripts/verify_data.R` checks file integrity.
 The source repository's license is retained in `SOURCE_LICENSE`.
 
 The extract contains 1,132 pseudonymized users, 34,078 domains with recorded

@@ -13,7 +13,7 @@ specified prediction-error process. For a comparison with user weights `a`,
 the relevant domain weights are `w = C'a`: its bias is `w'b` and its variance
 is `w'Σw`.
 
-The [paper](total_error.pdf) characterizes the sharp range of a comparison given
+The [paper](ms/main.pdf) characterizes the sharp range of a comparison given
 exact confusion counts and shows when those counts suffice. It distinguishes
 prediction-error covariance from uncertainty due to a randomized label audit.
 An audit can provide simultaneous finite-sample bounds, but projecting its count
@@ -27,9 +27,9 @@ stress test with deliberately generated mistakes, not an evaluation of a trained
 classifier. A prespecified contrast compares three audit intervals on common
 samples. The [data documentation](data/README.md) states the analytic frame,
 transformations, redistribution provenance, and limits of the reference labels.
-The [research plan](research_plan.md) records choices and development history.
+The [research plan](docs/research_plan.md) records choices and development history.
 
-The [historical simulation](sim_total_error.md) retains the original continuous-data
+The [historical simulation](docs/sim_total_error.md) retains the original continuous-data
 example. Exact finite-enumeration tests verify binary-label propagation, sharp
 bounds, hypergeometric inversion, simultaneous audit coverage, and design-unbiased
 estimation. The rare-error example uses exact binomial probabilities.
@@ -68,10 +68,27 @@ weighted exposure and shared errors.
 
 See also: [Gathering Domain Knowledge](https://gojiberries.io/2022/05/15/gathering-domain-knowledge/).
 
+## Layout
+
+| Folder | Contents |
+| --- | --- |
+| `ms/` | Manuscript, bibliography, section sources, and compiled paper |
+| `R/` | Reusable mathematical and data routines |
+| `scripts/` | Analysis and exhibit-generation entry points |
+| `data/` | Bundled inputs, provenance, and `results/` analysis outputs |
+| `tabs/` | Generated LaTeX tables and numerical macros |
+| `figs/` | Generated research figures |
+| `docs/` | Research plan, historical simulation report, and bibliography audit |
+| `tests/` | Exact mathematical and implementation checks |
+
+LaTeX intermediates stay in ignored `ms/build/`. The root contains project
+configuration and this README. Bibliographic source checks are recorded in
+[the validation log](docs/bibliography_validation.md).
+
 ## Reproduce
 
 Requires R with `MASS`, `Matrix`, `digest`, `rmarkdown`, `knitr`, and `lintr`,
-Pandoc, and a LaTeX installation with `latexmk`, `natbib`, `microtype`, `booktabs`,
+Pandoc, and a LaTeX installation with `latexmk`, BibTeX, `natbib`, `microtype`, `booktabs`,
 `amsthm`, and Latin Modern fonts. Install missing R packages with:
 
 ```r
@@ -85,14 +102,20 @@ make check
 This verifies bundled data hashes, runs all exact mathematical tests and R linting,
 regenerates both benchmark studies (1,000 audit repetitions per design), the exact
 rare-error example, all numerical LaTeX inputs and figures, and the historical
-simulation, then compiles the PDF and checks whitespace. No sibling repository,
-network data download, or fitted model is required. Run from the repository root.
+simulation, then validates every bibliography entry, compiles the PDF, and checks
+whitespace. No sibling repository, network data download, or fitted model is
+required. Run from the repository root.
 
 - `make test`: exact correctness checks without regenerating the paper.
-- `make analysis`: rebuild all results, exhibits, and the historical report.
+- `make analysis`: rebuild the scientific results under `data/results/`.
+- `make exhibits`: rebuild the analyses, tables, numerical macros, and figure.
+- `make report`: rebuild the historical simulation report and its numerical inputs.
 - `make paper`: rebuild the analyses and compile the paper.
-- `results/`: all contrasts, audit replicates and summaries, and R session metadata.
-- `generated/`: derived LaTeX numbers, tables, and the audit figure; rebuild these
+- `make manuscript`: compile `ms/main.pdf` from existing results.
+- `make bibliography`: parse and check every entry, including uncited entries.
+- `data/results/`: all contrasts, audit replicates and summaries, and metadata.
+  `docs/session_info.txt` records the R session.
+- `tabs/` and `figs/`: derived LaTeX numbers, tables, and figures; rebuild these
   rather than editing them.
 
 The random seeds are fixed in each analysis script. Numerical claims in the paper

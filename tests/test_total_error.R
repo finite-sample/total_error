@@ -1,4 +1,4 @@
-source("sim_total_error.R")
+source("R/sim_total_error.R")
 
 assert_equal <- function(actual, expected, tolerance = 1e-10) {
   comparison <- all.equal(

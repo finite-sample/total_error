@@ -1,8 +1,9 @@
-bounds <- read.csv("results/browsing_bounds.csv")
-metadata <- read.csv("results/browsing_metadata.csv")
-audit <- read.csv("results/audit_summary.csv")
-rare <- read.csv("results/rare_errors.csv")
-dir.create("generated", showWarnings = FALSE)
+bounds <- read.csv("data/results/browsing_bounds.csv")
+metadata <- read.csv("data/results/browsing_metadata.csv")
+audit <- read.csv("data/results/audit_summary.csv")
+rare <- read.csv("data/results/rare_errors.csv")
+dir.create("tabs", showWarnings = FALSE)
+dir.create("figs", showWarnings = FALSE)
 number <- function(x, digits = 0) formatC(x, format = "f", digits = digits, big.mark = ",")
 focal <- subset(bounds, outcome == "fb_pixel" & scale == "shares" &
                   coefficient == "gender_Female" & error_fraction == 0.01)
@@ -26,7 +27,7 @@ macros <- c(
 )
 writeLines(
   sprintf("\\newcommand{\\%s}{%s}", names(macros), macros),
-  "generated/research_results.tex"
+  "tabs/research_results.tex"
 )
 labels <- c(
   ddg_join_ads = "Advertising trackers", third_party_cookies = "Third-party cookies",
@@ -48,7 +49,7 @@ writeLines(
     "Scanner outcome & Sign identified & Reversal possible & Median width (pp) \\\\",
     "\\midrule", rows, "\\bottomrule", "\\end{tabular}"
   ),
-  "generated/browsing_table.tex"
+  "tabs/browsing_table.tex"
 )
 method_names <- c(
   count = "Count projection", normal = "Direct normal",
@@ -76,10 +77,10 @@ writeLines(
     "Design & Budget & Interval & Coverage (\\%) & Width (pp) & Sign (\\%) \\\\",
     "\\midrule", rows, "\\bottomrule", "\\end{tabular}"
   ),
-  "generated/audit_table.tex"
+  "tabs/audit_table.tex"
 )
 # Common axes compare interval width and coverage across the six audit designs.
-pdf("generated/audit_comparison.pdf", width = 6.5, height = 4.3, family = "Helvetica")
+pdf("figs/audit_comparison.pdf", width = 6.5, height = 4.3, family = "Helvetica")
 par(
   mfrow = c(1, 2), mar = c(4.2, 8, 2.2, 0.6), mgp = c(2.7, 0.7, 0),
   cex = 0.85, las = 1
@@ -117,9 +118,9 @@ points(100 * normal$coverage, y, pch = 16)
 dev.off()
 writeLines(
   trimws(capture.output(sessionInfo()), which = "right"),
-  "results/session_info.txt"
+  "docs/session_info.txt"
 )
-refinement <- read.csv("results/refinement_summary.csv")
+refinement <- read.csv("data/results/refinement_summary.csv")
 rows <- vapply(seq_len(nrow(refinement)), function(i) {
   x <- refinement[i, ]
   sprintf("%d & %.1f & %.1f & %.1f \\\\", x$strata,
@@ -128,4 +129,4 @@ rows <- vapply(seq_len(nrow(refinement)), function(i) {
 writeLines(c("\\begin{tabular}{rrrr}", "\\toprule",
              "Strata & Exact-count width (pp) & Audit width (pp) & Coverage (\\%) \\\\",
              "\\midrule", rows, "\\bottomrule", "\\end{tabular}"),
-           "generated/refinement_table.tex")
+           "tabs/refinement_table.tex")

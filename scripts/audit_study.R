@@ -1,7 +1,7 @@
 source("R/audit_bounds.R")
 source("R/audit_design.R")
 source("R/browsing_data.R")
-source("analysis/verify_data.R")
+source("scripts/verify_data.R")
 args <- commandArgs(trailingOnly = TRUE)
 replications <- if (length(args)) as.integer(args[1]) else 1000L
 stopifnot(is.finite(replications), replications > 0)
@@ -39,9 +39,9 @@ for (budget in c(250, 1000, 2000)) {
 }
 results <- do.call(rbind, results)
 rownames(results) <- NULL
-dir.create("results", showWarnings = FALSE)
+dir.create("data/results", showWarnings = FALSE)
 suffix <- if (replications < 1000) "_pilot" else ""
-write.csv(results, paste0("results/audit_draws", suffix, ".csv"), row.names = FALSE)
+write.csv(results, paste0("data/results/audit_draws", suffix, ".csv"), row.names = FALSE)
 summary <- do.call(rbind, lapply(split(
   results,
   interaction(results$budget, results$head_fraction, results$method, drop = TRUE)
@@ -59,5 +59,5 @@ summary <- do.call(rbind, lapply(split(
   )
 }))
 rownames(summary) <- NULL
-write.csv(summary, paste0("results/audit_summary", suffix, ".csv"), row.names = FALSE)
+write.csv(summary, paste0("data/results/audit_summary", suffix, ".csv"), row.names = FALSE)
 print(summary)

@@ -57,7 +57,7 @@ adjust_total <- function(predicted, volume, fpr, fnr) {
   (predicted - fpr * volume) / denominator
 }
 
-write_results <- function(simulation, directory = "generated") {
+write_results <- function(simulation, directory = "tabs") {
   dir.create(directory, showWarnings = FALSE)
   results <- simulation$results
   original <- results[results$model == "original", ]

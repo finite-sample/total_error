@@ -1,6 +1,6 @@
 source("R/audit_design.R")
 source("R/browsing_data.R")
-source("analysis/verify_data.R")
+source("scripts/verify_data.R")
 panel <- read_browsing()
 truth <- panel$labels[, "fb_pixel"]
 weights <- panel$influences$shares["gender_Female", ]
@@ -49,7 +49,7 @@ for (bins in c(1, 5, 25)) {
     certification = mean(draws$certified), replications = replications
   )
 }
-write.csv(do.call(rbind, results), "results/refinement_draws.csv", row.names = FALSE)
+write.csv(do.call(rbind, results), "data/results/refinement_draws.csv", row.names = FALSE)
 summary <- do.call(rbind, summary)
-write.csv(summary, "results/refinement_summary.csv", row.names = FALSE)
+write.csv(summary, "data/results/refinement_summary.csv", row.names = FALSE)
 print(summary)

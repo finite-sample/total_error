@@ -22,11 +22,11 @@ three proxies:
 - The original addition of 0.1 times the respondent’s sample standard
   deviation of the true measure.
 
-The [R source](sim_total_error.R) generates the draws and summaries.
-These are continuous, centered measurements, not binary labels, visit
-counts, or durations. Each respondent has independent draws; the
-simulation does not reproduce the shared domain labels in browsing data.
-It isolates accumulation of bias.
+The [R source](../R/sim_total_error.R) generates the draws and
+summaries. These are continuous, centered measurements, not binary
+labels, visit counts, or durations. Each respondent has independent
+draws; the simulation does not reproduce the shared domain labels in
+browsing data. It isolates accumulation of bias.
 
 ## Results
 
@@ -95,7 +95,7 @@ Thus $(\widehat T_i-\alpha V_i)/(1-\alpha-\beta)$ is unbiased when the
 rates are known and their sum is not one. Estimating the rates adds
 uncertainty; transferring unweighted validation rates to
 browsing-weighted totals requires evidence. See the
-[note](total_error.pdf) for definitions, shared domain errors, and
+[note](../ms/main.pdf) for definitions, shared domain errors, and
 implications for group differences.
 
 ## Reproduction
