@@ -58,3 +58,6 @@ rsconnect/
 *.log
 *.out
 *.synctex.gz
+
+# Development pilots
+/results/*_pilot.csv

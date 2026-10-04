@@ -1,0 +1,167 @@
+\section{What a confusion matrix identifies}\label{sec:identification}
+A confusion matrix can be exactly correct for the target domains and still fail
+to determine a user comparison. This is an information problem before it is a
+sampling problem. Fix predictions $q_j=\widehat y_j$, and let
+$\theta=\sum_j w_jy_j$ be a comparison with known domain weights.
+For a user contrast $a^{\mathsf T}T$, $w=C^{\mathsf T}a$; a least-squares
+coefficient is another such contrast when the regressors are fixed.
+The prediction-based comparison is $\widehat\theta=\sum_jw_jq_j$.
+
+Let $P=\{j:q_j=1\}$ and $N=\{j:q_j=0\}$. Suppose the entire target-population
+confusion matrix is known: $f$ predictions in $P$ are false positives and $g$
+predictions in $N$ are false negatives. This grants more information than ordinary
+held-out validation, whose error rates require a transport assumption.
+For a finite collection $B$ of weights, let $S_-(B,m)$ and $S_+(B,m)$ denote
+the sums of its $m$ smallest and largest elements, with a zero sum when $m=0$.
+
+\begin{proposition}[Sharp bounds from confusion counts]\label{prop:bounds}
+Across binary label vectors compatible with $q,f,g$, the smallest and largest
+possible errors $\Delta=\widehat\theta-\theta$ are
+\begin{align}
+ L&=S_-(w_P,f)-S_+(w_N,g),\notag\\
+ U&=S_+(w_P,f)-S_-(w_N,g).
+\end{align}
+Consequently $[\widehat\theta-U,\widehat\theta-L]$ is the smallest interval
+containing every compatible value of $\theta$. Both endpoints are attainable.
+\end{proposition}
+\begin{proof}
+Only false positives and false negatives contribute:
+$\Delta=\sum_{j\in\mathrm{FP}}w_j-\sum_{j\in\mathrm{FN}}w_j$.
+Select $f$ indices from $P$ and $g$ from $N$. The two selections have disjoint
+supports and no other restrictions. Selecting the smallest positive-stratum
+weights and largest negative-stratum weights minimizes the error; reversing
+these selections maximizes it. Assign the selected indices the corresponding
+true labels to attain each endpoint.
+\end{proof}
+The compatible values form a finite set, so the interval is its convex hull;
+not every interior value need be attainable. A reported sign is established by
+these counts only if the bounding interval excludes zero. The calculation
+requires sorting, rather than a general integer-programming solver.
+
+For example, take $q=(1,1,0,0)$, $w=(1,-1,1,-1)$, and $f=g=1$.
+The same confusion matrix permits errors of $-2$, $0$, and $2$.
+Prevalence, accuracy, FPR, and FNR are identical across those assignments.
+Adding correctly classified domains with zero contrast weight makes accuracy
+arbitrarily close to one without resolving the comparison. These are domains
+that can affect individual exposure but cancel from the chosen contrast.
+
+\begin{proposition}[When counts suffice]\label{prop:sufficient}
+In a stratum of $M$ predicted labels with exactly $m$ errors, the error sum is
+point identified if and only if $m\in\{0,M\}$ or all its contrast weights are
+equal. Its identification width obeys
+\begin{equation}\label{eq:dispersion}
+ S_+(w,m)-S_-(w,m)
+ \leq \min(m,M-m)\{\max_jw_j-\min_jw_j\}.
+\end{equation}
+Widths add across strata. For several comparisons, counts determine every
+comparison if and only if their vector of domain weights is constant within
+each stratum with an interior error count.
+\end{proposition}
+\begin{proof}
+Constant weights, no errors, and all errors each determine the sum. If
+$0<m<M$ and two weights differ, choose an error set containing one of those
+indices but not the other. Exchanging them changes the sum, proving necessity.
+The difference between two sums of $m$ terms is at most $m$ times the range.
+Taking complements gives the corresponding bound with $M-m$ terms. The
+vector statement applies the exchange argument to each coordinate.
+\end{proof}
+The result specifies what a finer validation table must preserve. Stratifying
+by predicted label alone is sufficient only when the contrast attaches equal
+weights within each partially erroneous stratum. Partitioning domains by
+similar contrast weights can reduce ambiguity; bins chosen for one comparison
+need not work for another. Error rates conditional on user demographics are
+not automatically available, because the same domain can enter many groups.
+
+\section{Auditing the target domains}\label{sec:audit}
+A target-domain audit can convert these bounds into confidence intervals.
+The construction below uses established finite-population counting and audit
+ideas. Sorting worst-case error contributions and checking them by random
+audits has close precedents in election auditing \citep{stark2008audits}.
+Weighted finite-population inference with prediction side information is also
+an established problem \citep{shekhar2023audits}. The purpose here is to expose
+what confusion-count evidence preserves about reusable predictions, not to
+claim a new general audit principle or an optimal interval.
+
+Partition the domains into strata $h=1,\ldots,H$ using information known before
+labels are audited. Draw a simple random sample without replacement of a fixed
+size $n_h$ from the $M_h$ domains in each stratum. Let $K_h$ be its unknown
+number of incorrect predictions and $X_h$ the observed audit-error count.
+Conditional on the fixed labels and predictions,
+\begin{equation}
+ X_h\sim\operatorname{Hypergeometric}(M_h,K_h,n_h).
+\end{equation}
+Choose nonnegative error budgets $\delta_h$ summing to at most $\delta$.
+Retain each feasible integer $K$ for which both
+$\Pr_K(X_h\leq x_h)\geq\delta_h/2$ and
+$\Pr_K(X_h\geq x_h)\geq\delta_h/2$.
+Write the smallest and largest retained integers as $\ell_h,u_h$.
+A census stratum reveals $K_h=x_h$ exactly and needs no error budget; an
+unaudited stratum contributes no count restriction.
+
+Let $O$ be the audited domains and $U_h$ the unaudited domains in stratum $h$.
+Set $c_j=(2q_j-1)w_j$ and
+$d_O=\sum_{j\in O}w_j(q_j-y_j)$. Define
+\begin{align}
+ L_A&=d_O+\sum_h\min_{\ell_h-x_h\leq m\leq u_h-x_h}
+                 S_-(c_{U_h},m),\notag\\
+ U_A&=d_O+\sum_h\max_{\ell_h-x_h\leq m\leq u_h-x_h}
+                 S_+(c_{U_h},m),\label{eq:auditbounds}
+\end{align}
+where the optimization is over integers. Signed weights make this optimization
+necessary: an extreme need not occur at the largest admissible error count.
+
+\begin{proposition}[A simultaneous audit certificate]\label{prop:audit}
+Under the fixed stratified sampling design, the interval
+$[\widehat\theta-U_A,\widehat\theta-L_A]$ covers the fixed true contrast with
+probability at least $1-\delta$. The same event guarantees coverage for every
+linear contrast of this one label vector. The endpoints are sharp over the
+binary configurations satisfying the count intervals and all audited labels.
+\end{proposition}
+\begin{proof}
+Inverting each pair of hypergeometric tails excludes the true $K_h$ with
+probability at most $\delta_h$. A union bound therefore includes all true
+counts with probability at least $1-\delta$. On that event, the true errors in
+$U_h$ number between $\ell_h-x_h$ and $u_h-x_h$. Sorting and choosing a count
+in that range gives the extrema in equation~\eqref{eq:auditbounds}; the choices
+are independent restrictions across strata and hence jointly attainable.
+The true label vector lies in the same configuration set for every choice of
+$w$, which establishes simultaneous coverage.
+\end{proof}
+Coverage is over repeated audit samples, not conditional on the realized
+sampled identities. It requires neither independent classification errors nor
+a large-domain Gaussian approximation. The count confidence region can be
+conservative, and sharp projection of that region does not make the resulting
+confidence interval shortest. The guarantee concerns one outcome; combining
+separate audits of several outcomes requires an additional simultaneous-error
+allocation. Optional stopping, adaptive strata, and imperfect audit labels
+require further assumptions or other audit procedures.
+
+\paragraph{The information discarded by count projection.}
+A large audit need not make these intervals narrow. To see this, let all $N$
+predictions equal one, half the weights equal $1/N$ and half equal $-1/N$.
+Suppose a fraction $p<1/2$ of labels in each half are wrong. The true contrast
+is zero. If $n\to\infty$ but $n/N\to0$, an unstratified audit consistently
+learns the overall error fraction. Yet unaudited errors can still be placed
+almost entirely on either weight sign: the projected interval width converges
+to $2p$. A direct estimate of the weighted audit residual instead has standard
+error of order $n^{-1/2}$. Separating the two weight signs into strata removes
+this particular information loss. The distinction is between estimating a
+weighted residual and bounding it after retaining only counts.
+
+For a declared contrast, an ordinary stratified difference estimator uses
+$z_j=w_j(y_j-q_j)$ directly:
+\begin{equation}\label{eq:stratified}
+ \widetilde\theta=\widehat\theta+
+ \sum_h\frac{M_h}{n_h}\sum_{j\in O_h}z_j,\qquad
+ \widehat V=\sum_h\frac{M_h^2(1-n_h/M_h)}{n_h}s_{z,h}^2,
+\end{equation}
+where $s_{z,h}^2$ is the sample variance and a census stratum contributes zero
+variance. Under independent stratum draws, the estimate and variance estimator
+are design unbiased, with at least two audited domains in each noncensus
+stratum. Normal intervals need a separate approximation. A conservative
+finite-sample alternative applies Hoeffding's without-replacement inequality
+\citep{hoeffding1963} to each bounded residual mean and sums the stratum radii.
+More efficient weighted audit procedures are available \citep{shekhar2023audits}.
+The count certificate is useful for interpreting validation summaries and
+covering many comparisons together, not a general replacement for direct
+inference about a chosen comparison.

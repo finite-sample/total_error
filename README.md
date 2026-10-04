@@ -1,4 +1,4 @@
-# Total Error: Using ML to Measure Total Exposure Online
+# Total Error: What Classifier Validation Establishes About Exposure Comparisons
 
 Small errors in domain labels can become large errors in people's total online
 exposure. A domain's label is reused for every visit and every user, so mistakes
@@ -13,13 +13,26 @@ specified prediction-error process. For a comparison with user weights `a`,
 the relevant domain weights are `w = C'a`: its bias is `w'b` and its variance
 is `w'Σw`.
 
-The [note](total_error.pdf) develops these identities, distinguishes
-false-positive rates from errors among predicted positives, and explains the
-assumptions needed for corrections and uncertainty estimates. The
-[simulation](sim_total_error.md) reproduces the original continuous-data
-example and adds constant-bias and no-added-bias comparisons. It isolates bias
-accumulation; it does not simulate shared domain labels. Exact finite-enumeration
-tests separately verify the binary-label bias, covariance, and sampling correction.
+The [paper](total_error.pdf) characterizes the sharp range of a comparison given
+exact confusion counts and shows when those counts suffice. It distinguishes
+prediction-error covariance from uncertainty due to a randomized label audit.
+An audit can provide simultaneous finite-sample bounds, but projecting its count
+summaries can lose substantial information about weighted errors. Direct
+weighted-error estimation is the relevant comparison. These constructions use
+established quantification, survey-sampling, and statistical-auditing tools.
+
+The bundled browsing benchmark includes seven scanner outcomes, twelve demographic
+coefficients, visit totals and shares, and three imposed error fractions. It is a
+stress test with deliberately generated mistakes, not an evaluation of a trained
+classifier. A prespecified contrast compares three audit intervals on common
+samples. The [data documentation](data/README.md) states the analytic frame,
+transformations, redistribution provenance, and limits of the reference labels.
+The [research plan](research_plan.md) records choices and development history.
+
+The [historical simulation](sim_total_error.md) retains the original continuous-data
+example. Exact finite-enumeration tests verify binary-label propagation, sharp
+bounds, hypergeometric inversion, simultaneous audit coverage, and design-unbiased
+estimation. The rare-error example uses exact binomial probabilities.
 
 The companion [fewlab](https://github.com/finite-sample/fewlab) project uses the
 same mapping to choose which reusable labels to acquire. A probability sample
@@ -57,20 +70,40 @@ See also: [Gathering Domain Knowledge](https://gojiberries.io/2022/05/15/gatheri
 
 ## Reproduce
 
-Requires R with `MASS`, `rmarkdown`, `knitr`, and `lintr`, Pandoc, and a LaTeX installation
-with `latexmk`, `natbib`, `microtype`, `booktabs`, and Latin Modern fonts.
-Install missing R packages with:
+Requires R with `MASS`, `Matrix`, `digest`, `rmarkdown`, `knitr`, and `lintr`,
+Pandoc, and a LaTeX installation with `latexmk`, `natbib`, `microtype`, `booktabs`,
+`amsthm`, and Latin Modern fonts. Install missing R packages with:
 
 ```r
-install.packages(c("MASS", "rmarkdown", "knitr", "lintr"))
+install.packages(c("MASS", "Matrix", "digest", "rmarkdown", "knitr", "lintr"))
 ```
 
 ```sh
 make check
 ```
 
-This runs the algebra and historical-reproduction tests and R linting, regenerates the
-simulation report and LaTeX numerical inputs, compiles `total_error.pdf`, and
-checks whitespace. `make test` runs the tests alone; `make paper` regenerates
-the report and PDF. Generated numerical inputs are committed under `generated/`
-and should be rebuilt, not edited. The simulation report records the R session.
+This verifies bundled data hashes, runs all exact mathematical tests and R linting,
+regenerates both benchmark studies (1,000 audit repetitions per design), the exact
+rare-error example, all numerical LaTeX inputs and figures, and the historical
+simulation, then compiles the PDF and checks whitespace. No sibling repository,
+network data download, or fitted model is required. Run from the repository root.
+
+- `make test`: exact correctness checks without regenerating the paper.
+- `make analysis`: rebuild all results, exhibits, and the historical report.
+- `make paper`: rebuild the analyses and compile the paper.
+- `results/`: all contrasts, audit replicates and summaries, and R session metadata.
+- `generated/`: derived LaTeX numbers, tables, and the audit figure; rebuild these
+  rather than editing them.
+
+The random seeds are fixed in each analysis script. Numerical claims in the paper
+are generated from the results. Monte Carlo intervals quantify simulation error;
+they are distinct from the intervals being evaluated. The recorded R session gives
+the tested dependency versions. Exact bitwise equality across R versions is not
+promised; the mathematical tests check the substantive identities and guarantees.
+
+A declared follow-up refines validation strata by signed influence at a fixed audit
+budget. It distinguishes ambiguity with exactly known counts from uncertainty
+when those counts must be estimated. The normal-interval illustration is limited
+to one outcome and imposed prediction vector. The paper does not claim that count
+projection improves on modern weighted-audit methods or that these stress tests
+establish a classifier's real-world performance.

@@ -2,55 +2,79 @@
 \usepackage[margin=1in]{geometry}
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
-\usepackage{amsmath,amssymb,booktabs}
+\usepackage{amsmath,amssymb,amsthm,booktabs,graphicx}
 \usepackage[round,authoryear]{natbib}
 \usepackage[colorlinks=true,allcolors=blue]{hyperref}
 \usepackage{microtype}
-\hypersetup{pdftitle={Total Error: Using ML to Measure Total Exposure},
+\hypersetup{pdftitle={Total Error: What Classifier Validation Establishes About Exposure Comparisons},
   pdfauthor={Gaurav Sood}}
 \input{generated/results}
+\input{generated/research_results}
+\newtheorem{proposition}{Proposition}
 \newcommand{\E}{\operatorname{E}}
 \newcommand{\Var}{\operatorname{Var}}
 \newcommand{\Cov}{\operatorname{Cov}}
 \newcommand{\Corr}{\operatorname{Corr}}
-\title{Total Error: Using ML to Measure Total Exposure}
+\title{Total Error: What Classifier Validation Establishes About Exposure Comparisons}
 \author{Gaurav Sood\thanks{\href{mailto:gsood07@gmail.com}{gsood07@gmail.com}.
 The argument about browsing volume and costly errors on popular domains appears
 in the June 2020 manuscript coauthored with Suriyan Laohaprapanon
 \citep{laohaprapanon2020domain}. The standalone note and original simulation
 were added in June 2023. This revision corrects the error-rate definitions
-and develops the covariance and inference results. Code and history:
-\url{https://github.com/soodoku/total_error}.}}
+and develops the validation bounds and inference results. Code and history:
+\url{https://github.com/finite-sample/total_error}.}}
 \date{}
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Accurate domain classification need not yield accurate measures of how much
-content people consume. Each classification error is multiplied by the user's
-visits or time on that domain. Unequal browsing volumes can therefore turn
-small systematic errors into large, unequal biases in exposure totals.
-Because users share domain labels, their measurement errors are also correlated.
-I derive the bias and covariance of exposure totals and show how both enter
-group comparisons and regressions. A simulation isolates the accumulation of
-bias; the domain-level formulation explains why uncertainty must also follow
-the shared labels. Validation and manual labeling should reflect the exposure
-measure and comparison the researcher wants to estimate.
+A classifier's confusion matrix need not validate comparisons constructed from
+its predictions. When domain labels are reused across browsing histories, the
+relevant error is a signed, weighted sum of domain mistakes. I characterize the
+sharp bounds on this error given exact target-population confusion counts and
+show when those counts identify a comparison. The decisive restriction is
+constant influence within each partially erroneous stratum. A finite-population
+audit gives simultaneous bounds for linear comparisons, but projecting count
+information can discard enough information that interval width remains positive
+even as the audit grows. Direct estimation of weighted errors avoids that loss.
+A reproducible browsing-data stress test illustrates the distinction, while
+an exact rare-error example shows why many contributing domains alone do not
+justify normal inference. The results clarify what validation must retain when
+predictions become research outcomes.
 \end{abstract}
 
-Say we want to measure how much pornography people consume online. A model
-labels domains, and browsing records supply visits or time spent on each domain.
-Summing visits to domains labeled pornographic gives a measure of each person's
-exposure. But a classifier's error rate gives equal weight to domains, whereas
-an exposure total weights each domain by use. A wrong label on a heavily visited
-domain can distort many people's totals at once.
+A researcher labels websites and combines those labels with browsing records
+to compare exposure across demographic groups. An accurate classifier seems
+to provide reassurance. Yet accuracy counts domains equally, whereas each
+comparison attaches its own signed weights to the same labels. A mistake on
+a domain visited disproportionately by one group can matter more than many
+correct labels elsewhere. Because users share domains, the same mistakes also
+create dependent measurement errors. Both bias and uncertainty depend on where
+errors occur.
 
-This is related to quantification, which estimates label prevalence in a target
-population from imperfect predictions \citep{vaz2019quantification}. Here the
-objects of interest are person-specific weighted totals and comparisons among
-them. Different users attach different weights to the same predictions. That
-structure determines both bias and dependence across users; correcting an
-overall prevalence does not by itself validate a user-level comparison.
+This note asks what even an exactly known target-population confusion matrix
+establishes about such comparisons. The answer is a sharp identification
+interval obtained by sorting the comparison's domain weights. The interval
+collapses precisely when weights are constant within every prediction stratum
+with an interior error count. This characterization separates a shortage of
+validation observations from information lost by summarizing those observations
+as counts. It also explains why a count-based audit can remain imprecise after
+the aggregate error fraction is accurately learned.
+
+The problem intersects several established literatures. Quantification estimates
+population label prevalence from predictions and error rates
+\citep{vaz2019quantification}; prevalence uses equal domain weights, whereas
+exposure comparisons use heterogeneous, often signed weights. Shared domain
+errors have the same linear propagation structure that motivates attention to
+common shocks in shift-share inference \citep{adao2019}. Multiaccuracy already
+expresses validation through residual moments for relevant functions
+\citep{kim2019}. Design-based supervised learning supplies unbiased corrections
+from probability samples of verified labels \citep{egami2023}, and election and
+financial auditing already address bounded weighted errors using random audits
+\citep{stark2008audits,shekhar2023audits}. Neither covariance propagation nor the
+difference estimator is a new result here. The contribution is the explicit
+characterization of what confusion summaries retain for reused labels, its
+limits for auditing, and a reproducible assessment on exposure comparisons.
 
 \section{From domain labels to exposure}
 Let $i=1,\ldots,n$ index users and $j=1,\ldots,k$ index domains. Let $c_{ij}\geq0$
@@ -87,40 +111,7 @@ error requires a stated source of randomness. Equations~\eqref{eq:moments}
 describe uncertainty from the specified prediction-error process; they do not
 include user sampling, browsing-log error, or uncertainty about the construct.
 
-\section{Bias and the denominators of error rates}
-Let $\alpha_j$ be the probability of predicting one for a truly negative domain
-and $\beta_j$ the probability of predicting zero for a truly positive domain,
-conditional on the browsing design. Then
-\begin{equation}\label{eq:bias}
- b_j=\alpha_j(1-y_j)-\beta_j y_j,\qquad
- \E[d_i\mid C,y]=\sum_j c_{ij}\{\alpha_j(1-y_j)-\beta_j y_j\}.
-\end{equation}
-False-positive rates condition on true negatives; false-negative rates condition
-on true positives. Multiplying a false-positive rate by predicted positives
-uses the wrong denominator. Such a calculation would instead require the
-probability of a true negative conditional on a positive prediction, together
-with assumptions that justify transferring that probability to the weighted
-population. These conditional probabilities are not interchangeable.
-
-If $\alpha_j=\alpha$ on negative domains and $\beta_j=\beta$ on positive domains,
-\begin{equation}\label{eq:constantbias}
- \E[d_i\mid C,y]=\alpha(V_i-T_i)-\beta T_i
- =V_i\{\alpha-(\alpha+\beta)\pi_i\},\qquad \pi_i=T_i/V_i,
-\end{equation}
-where the share $\pi_i$ is defined for $V_i>0$. At a fixed true share, expected
-bias scales with browsing volume unless the expression in braces is zero.
-For $\alpha+\beta>0$, cancellation occurs at
-$\pi_i=\alpha/(\alpha+\beta)$. Equal positive error rates cancel only when
-half of visits are to truly positive domains. Thus the difference between
-FPR and FNR alone does not determine bias. Nor does $D_i$ alone: repeated
-visits matter through $c_{ij}$.
-
-The common-rate assumption is stronger than knowing an average error rate on a
-validation set of domains. Errors may depend on popularity, domain type, or
-features associated with a particular group's browsing. In that case,
-equation~\eqref{eq:bias}, with rates conditional on those features, is the
-relevant expression. The bias in a share is $\E[d_i\mid C,y]/V_i$; dividing
-by volume removes the mechanical scale factor, not misclassification bias.
+\input{sections/validation}
 
 \section{Shared errors and standard errors}
 If prediction errors are independent across domains conditional on $C,y$, let
@@ -129,6 +120,8 @@ $v_j=\Var(e_j\mid C,y)$. Equation~\eqref{eq:moments} becomes
  \Var(d_i\mid C,y)=\sum_j c_{ij}^2v_j,\qquad
  \Cov(d_i,d_\ell\mid C,y)=\sum_j c_{ij}c_{\ell j}v_j.
 \end{equation}
+Let $\alpha_j$ denote the false-positive probability on a truly negative
+domain and $\beta_j$ the false-negative probability on a truly positive domain.
 For binary predictions,
 $v_j=\alpha_j(1-\alpha_j)$ on negative domains and
 $v_j=\beta_j(1-\beta_j)$ on positive domains. Variance depends on squared
@@ -179,6 +172,102 @@ users, retaining cross-domain dependence where required. Neither larger user
 samples nor user-level clustering alone guarantees that this component vanishes.
 Standard errors also do not repair systematic bias.
 
+\subsection{Many domains do not ensure a normal approximation}
+Even with independent domain errors, diffuse variance shares alone do not
+justify Gaussian inference. Let all true labels be zero and let each of $k$
+domains be falsely labeled positive independently with probability $1/k$.
+With $w_j=1$, total error $B_k$ is binomial with mean one and variance $1-1/k$.
+The largest domain variance share is $1/k$, yet
+$B_k-1\Rightarrow\operatorname{Poisson}(1)-1$, not a normal distribution.
+At $k=10{,}000$, an oracle interval using the exact bias and variance but a
+normal 1.96 cutoff has coverage \RareNormalCoverage{}\%. This calculation
+uses exact binomial probabilities, not simulation.
+
+For independent bounded binary errors, a sufficient Lindeberg condition is
+\[\frac{\max_j|w_j|}{\sqrt{\sum_jw_j^2v_j}}\to0.\]
+A small maximum variance share
+$\max_j w_j^2v_j/\sum_jw_j^2v_j$ is weaker when errors become rare. The example
+violates the former condition and satisfies the latter. A growing number of
+domains cannot substitute for a condition on the distribution of their errors.
+This is a prediction-error example, distinct from the fixed-label audit design.
+
+\input{sections/benchmark}
+
+\section{Implications for correction and validation}
+Under the common-rate model in Appendix~\ref{app:rates}, with known
+$\alpha,\beta$ and
+$\alpha+\beta\ne1$, equation~\eqref{eq:constantbias} gives an unbiased correction:
+\begin{equation}\label{eq:correction}
+ \widetilde T_i=\frac{\widehat T_i-\alpha V_i}{1-\alpha-\beta},\qquad
+ \E[\widetilde T_i\mid C,y]=T_i.
+\end{equation}
+The correction is unstable when the denominator is close to zero and may return
+values outside $[0,V_i]$. Clipping changes its expectation. Estimating error
+rates introduces additional uncertainty shared across users; rates estimated
+on unweighted domains need not transfer to weighted exposure. This is the
+connection to classifier-based quantification \citep{vaz2019quantification},
+with the additional requirement that the rates apply to each user's weights.
+
+Using probabilities $q_j$ instead of hard labels yields $\sum_j c_{ij}q_j$.
+Under a conditional-label model with information $\mathcal I$ that includes
+browsing weights, $q_j=\Pr(y_j=1\mid\mathcal I)$ makes that sum
+$\E[T_i\mid\mathcal I]$. Marginal calibration across domains alone does not
+supply this conditional property for every user or group. This conditional-label
+interpretation is distinct from the repeated-prediction interpretation used
+above; an uncertainty calculation must choose and state its target.
+
+Validation should match the research quantity. For individual totals, large
+$c_{ij}$ magnify label errors. For a particular contrast under independent
+domain errors, the variance contribution is $w_j^2v_j$ and the bias contribution
+is $w_jb_j$. Those quantities can guide a labeling audit more directly than
+domain frequency alone. Verified labels for influential domains eliminate their
+classification error if those labels are correct. Usage-weighted training is
+another option, but its effect on exposure error requires validation; concentrated
+weights do not by themselves establish that model performance will worsen.
+
+Changing classification thresholds is a sensitivity analysis, not a set of
+coverage-guaranteed bounds on true exposure. Winsorizing visits reduces the
+influence of large weights but changes the exposure quantity being estimated.
+The most useful validation reports errors in totals and in the intended
+comparisons, together with uncertainty that preserves the common domain labels.
+
+\appendix
+\section{Bias and the denominators of error rates}\label{app:rates}
+Let $\alpha_j$ be the probability of predicting one for a truly negative domain
+and $\beta_j$ the probability of predicting zero for a truly positive domain,
+conditional on the browsing design. Then
+\begin{equation}\label{eq:bias}
+ b_j=\alpha_j(1-y_j)-\beta_j y_j,\qquad
+ \E[d_i\mid C,y]=\sum_j c_{ij}\{\alpha_j(1-y_j)-\beta_j y_j\}.
+\end{equation}
+False-positive rates condition on true negatives; false-negative rates condition
+on true positives. Multiplying a false-positive rate by predicted positives
+uses the wrong denominator. Such a calculation would instead require the
+probability of a true negative conditional on a positive prediction, together
+with assumptions that justify transferring that probability to the weighted
+population. These conditional probabilities are not interchangeable.
+
+If $\alpha_j=\alpha$ on negative domains and $\beta_j=\beta$ on positive domains,
+\begin{equation}\label{eq:constantbias}
+ \E[d_i\mid C,y]=\alpha(V_i-T_i)-\beta T_i
+ =V_i\{\alpha-(\alpha+\beta)\pi_i\},\qquad \pi_i=T_i/V_i,
+\end{equation}
+where the share $\pi_i$ is defined for $V_i>0$. At a fixed true share, expected
+bias scales with browsing volume unless the expression in braces is zero.
+For $\alpha+\beta>0$, cancellation occurs at
+$\pi_i=\alpha/(\alpha+\beta)$. Equal positive error rates cancel only when
+half of visits are to truly positive domains. Thus the difference between
+FPR and FNR alone does not determine bias. Nor does $D_i$ alone: repeated
+visits matter through $c_{ij}$.
+
+The common-rate assumption is stronger than knowing an average error rate on a
+validation set of domains. Errors may depend on popularity, domain type, or
+features associated with a particular group's browsing. In that case,
+equation~\eqref{eq:bias}, with rates conditional on those features, is the
+relevant expression. The bias in a share is $\E[d_i\mid C,y]/V_i$; dividing
+by volume removes the mechanical scale factor, not misclassification bias.
+
+
 \section{A connection to label sampling}
 The same mapping supplies a remedy when a researcher can obtain verified
 labels for a probability sample of domains. The companion \texttt{fewlab}
@@ -189,8 +278,7 @@ row-normalized version. For the scalar contrast in equation~\eqref{eq:contrast},
 the corresponding influence is $w_j$.
 
 Freeze predictions $q_j$ before drawing a label sample. Let $R_j$ indicate
-selection, with known inclusion probability $s_j>0$ for every domain with
-nonzero influence. Conditional on the fixed population and predictions,
+selection, with known inclusion probability $s_j>0$ for every domain. Conditional on the fixed population and predictions,
 the difference estimator is
 \begin{equation}\label{eq:difference}
  \widetilde\theta=\sum_j w_jq_j+
@@ -215,7 +303,23 @@ This is uncertainty from randomized label acquisition, with $y$ and $q$ fixed;
 it is distinct from the prediction-error process in equation~\eqref{eq:moments}.
 Both calculations preserve the reuse of a domain label across people.
 
-\section{A simulation of accumulating bias}
+
+\section{Full audit comparison}\label{app:audit}
+\begin{table}[htbp]
+\centering\small
+\caption{All audit designs and methods for the prespecified coefficient}
+\input{generated/audit_table}
+\par\smallskip
+\begin{minipage}{\linewidth}\footnotesize
+Each row summarizes 1,000 domain audits. Coverage and sign certification are
+percentages; width is the mean in percentage points. Sign certification means
+that the interval excludes zero, irrespective of whether it covers the target.
+All methods within a design use common draws. Exact binomial Monte Carlo
+intervals, standard errors, and replicate results accompany the package.
+\end{minipage}
+\end{table}
+
+\section{The original simulation of accumulating bias}
 The original simulation draws 1,000 respondents, each with an independent
 observation count uniformly distributed over the integers from 5 to 1,000.
 Within respondents, independent bivariate normal pairs have zero means, unit
@@ -271,43 +375,7 @@ independently across respondents and does not simulate shared domain errors.
 The covariance results above follow from the domain formulation, and are checked
 separately by enumerating all prediction vectors in a small binary example.
 
-\section{Correction and validation}
-Under the common-rate model with known $\alpha,\beta$ and
-$\alpha+\beta\ne1$, equation~\eqref{eq:constantbias} gives an unbiased correction:
-\begin{equation}\label{eq:correction}
- \widetilde T_i=\frac{\widehat T_i-\alpha V_i}{1-\alpha-\beta},\qquad
- \E[\widetilde T_i\mid C,y]=T_i.
-\end{equation}
-The correction is unstable when the denominator is close to zero and may return
-values outside $[0,V_i]$. Clipping changes its expectation. Estimating error
-rates introduces additional uncertainty shared across users; rates estimated
-on unweighted domains need not transfer to weighted exposure. This is the
-connection to classifier-based quantification \citep{vaz2019quantification},
-with the additional requirement that the rates apply to each user's weights.
-
-Using probabilities $q_j$ instead of hard labels yields $\sum_j c_{ij}q_j$.
-Under a conditional-label model with information $\mathcal I$ that includes
-browsing weights, $q_j=\Pr(y_j=1\mid\mathcal I)$ makes that sum
-$\E[T_i\mid\mathcal I]$. Marginal calibration across domains alone does not
-supply this conditional property for every user or group. This conditional-label
-interpretation is distinct from the repeated-prediction interpretation used
-above; an uncertainty calculation must choose and state its target.
-
-Validation should match the research quantity. For individual totals, large
-$c_{ij}$ magnify label errors. For a particular contrast under independent
-domain errors, the variance contribution is $w_j^2v_j$ and the bias contribution
-is $w_jb_j$. Those quantities can guide a labeling audit more directly than
-domain frequency alone. Verified labels for influential domains eliminate their
-classification error if those labels are correct. Usage-weighted training is
-another option, but its effect on exposure error requires validation; concentrated
-weights do not by themselves establish that model performance will worsen.
-
-Changing classification thresholds is a sensitivity analysis, not a set of
-coverage-guaranteed bounds on true exposure. Winsorizing visits reduces the
-influence of large weights but changes the exposure quantity being estimated.
-The most useful validation reports errors in totals and in the intended
-comparisons, together with uncertainty that preserves the common domain labels.
-
+\clearpage
 \begingroup
 \small
 \setlength{\bibsep}{3pt}
