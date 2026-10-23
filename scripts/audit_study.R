@@ -31,6 +31,10 @@ for (budget in c(250, 1000, 2000)) {
           lower = limits[1], upper = limits[2],
           covered = limits[1] <= target & limits[2] >= target,
           certified = limits[1] > 0 | limits[2] < 0,
+          correct_sign = (limits[1] > 0 & target > 0) |
+            (limits[2] < 0 & target < 0),
+          wrong_sign = (limits[1] > 0 & target < 0) |
+            (limits[2] < 0 & target > 0),
           width = diff(limits)
         )
       }
@@ -53,7 +57,11 @@ summary <- do.call(rbind, lapply(split(
     coverage_mcse = sqrt(coverage * (1 - coverage) / nrow(x)),
     coverage_lower = binom.test(sum(x$covered), nrow(x))$conf.int[1],
     coverage_upper = binom.test(sum(x$covered), nrow(x))$conf.int[2],
-    mean_width = mean(x$width), certification = mean(x$certified),
+    mean_width = mean(x$width),
+    width_mcse = sd(x$width) / sqrt(nrow(x)),
+    certification = mean(x$certified),
+    correct_sign = mean(x$correct_sign),
+    wrong_sign = mean(x$wrong_sign),
     mean_error = mean(x$estimate - x$target),
     error_mcse = sd(x$estimate - x$target) / sqrt(nrow(x))
   )

@@ -5,6 +5,7 @@ all: paper
 analysis:
 	Rscript scripts/verify_data.R
 	Rscript scripts/browsing_study.R
+	Rscript scripts/adult_study.R
 	Rscript scripts/rare_errors.R
 	Rscript scripts/refinement_study.R
 	Rscript scripts/audit_study.R
@@ -31,9 +32,13 @@ test:
 	Rscript tests/test_total_error.R
 	Rscript tests/test_audit_bounds.R
 	Rscript tests/test_audit_design.R
+	Rscript tests/test_covariate_aggregation.R
 
 lint:
 	Rscript -e 'source("R/audit_bounds.R"); files <- c("docs/sim_total_error.Rmd", list.files(c("R", "scripts", "tests"), pattern = "[.]R$$", full.names = TRUE)); issues <- unlist(lapply(files, lintr::lint), recursive = FALSE); if (length(issues)) { print(issues); quit(status = 1) }'
+	python3 -m black --check scripts/build_adult_input.py
+	python3 -m isort --check-only scripts/build_adult_input.py
+	python3 -m flake8 scripts/build_adult_input.py
 
 check: test lint bibliography paper
 	git diff --check

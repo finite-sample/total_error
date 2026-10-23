@@ -1,8 +1,8 @@
 \section{What a confusion matrix identifies}\label{sec:identification}
-A confusion matrix can be exactly correct for the target domains and still fail
-to determine a user comparison. This is an information problem before it is a
-sampling problem. Fix the predictions $q$ and the domain weights $w$ induced
-by the estimand in equation~\eqref{eq:estimand}. We now ask what a validation
+A confusion matrix can be exactly correct for the target items and still fail
+to determine a downstream estimate. This is an information problem before it
+is a sampling problem. Fix the predictions $q$ and the item weights $w$
+in equation~\eqref{eq:estimand}. We now ask what a validation
 summary establishes about the fixed target $\theta=w^{\mathsf T}y$, without
 specifying a stochastic model for how the classifier's mistakes were generated.
 
@@ -40,12 +40,12 @@ requires sorting, rather than a general integer-programming solver.
 For example, take $q=(1,1,0,0)$, $w=(1,-1,1,-1)$, and $f=g=1$.
 The same confusion matrix permits errors of $-2$, $0$, and $2$.
 Prevalence, accuracy, FPR, and FNR are identical across those assignments.
-Adding correctly classified domains with zero contrast weight makes accuracy
-arbitrarily close to one without resolving the comparison. These are domains
-that can affect individual exposure but cancel from the chosen contrast.
+Adding correctly classified items with zero weight makes accuracy arbitrarily
+close to one without resolving the target. In the browsing application, these
+can be domains that affect individual exposure but cancel from a group contrast.
 
 \begin{proposition}[When counts suffice]\label{prop:sufficient}
-In a stratum of $M$ domains sharing the same predicted label, with exactly
+In a stratum of $M$ items sharing the same predicted label, with exactly
 $m$ errors, the error sum is
 point identified if and only if $m\in\{0,M\}$ or all its contrast weights are
 equal. Its identification width obeys
@@ -54,7 +54,7 @@ equal. Its identification width obeys
  \leq \min(m,M-m)\{\max_jw_j-\min_jw_j\}.
 \end{equation}
 Widths add across strata. For several comparisons, counts determine every
-comparison if and only if their vector of domain weights is constant within
+comparison if and only if their vector of item weights is constant within
 each stratum with an interior error count.
 \end{proposition}
 \begin{proof}
@@ -69,103 +69,102 @@ For a stratum mixing predicted labels, the corresponding criterion applies to
 the signed contributions $(2q_j-1)w_j$, not to $w_j$ alone.
 The result specifies what a finer validation table must preserve. Stratifying
 by predicted label alone is sufficient only when the contrast attaches equal
-weights within each partially erroneous stratum. Partitioning domains by
+weights within each partially erroneous stratum. Partitioning items by
 similar contrast weights can reduce ambiguity; bins chosen for one comparison
-need not work for another. Error rates conditional on user demographics are
-not automatically available, because the same domain can enter many groups.
+need not work for another. In browsing, error rates conditional on user
+demographics are not automatically available: the same domain can enter many
+groups.
 
-\section{Auditing the target domains}\label{sec:audit}
-A target-domain audit can convert these bounds into confidence intervals.
-The construction below uses established finite-population counting and audit
-ideas. Sorting worst-case error contributions and checking them by random
-audits has close precedents in election auditing \citep{stark2008audits}.
-Weighted finite-population inference with prediction side information is also
-an established problem \citep{shekhar2023audits}. The purpose here is to expose
-what confusion-count evidence preserves about reusable predictions, not to
-claim a new general audit principle or an optimal interval.
+\section{What a target-item audit can certify}\label{sec:audit}
+A probability audit can recover information that a confusion matrix discards.
+The construction uses established finite-population counting and audit ideas
+\citep{stark2008audits,shekhar2023audits}. Partition the target items using
+information known before labels are audited, then draw a fixed-size random
+sample without replacement within each stratum. Exact hypergeometric
+inversion gives a confidence interval $[\ell_h,u_h]$ for the number of
+incorrect predictions in stratum $h$; allocate error probabilities across
+strata so their sum is at most $\delta$.
 
-Partition the domains into strata $h=1,\ldots,H$ using information known before
-labels are audited. Draw a simple random sample without replacement of a fixed
-size $n_h$ from the $M_h$ domains in each stratum. Let $K_h$ be its unknown
-number of incorrect predictions and $X_h$ the observed audit-error count.
-Conditional on the fixed labels and predictions,
-\begin{equation}
- X_h\sim\operatorname{Hypergeometric}(M_h,K_h,n_h).
-\end{equation}
-Choose nonnegative error budgets $\delta_h$ summing to at most $\delta$.
-Retain each feasible integer $K$ for which both
-$\Pr_K(X_h\leq x_h)\geq\delta_h/2$ and
-$\Pr_K(X_h\geq x_h)\geq\delta_h/2$.
-Write the smallest and largest retained integers as $\ell_h,u_h$.
-A census stratum reveals $K_h=x_h$ exactly and needs no error budget; an
-unaudited stratum contributes no count restriction.
-
-Let $O$ be the audited domains and $U_h$ the unaudited domains in stratum $h$.
-Set $c_j=(2q_j-1)w_j$ and
-$d_O=\sum_{j\in O}w_j(q_j-y_j)$. Define
-\begin{align}
- L_A&=d_O+\sum_h\min_{\ell_h-x_h\leq m\leq u_h-x_h}
-                 S_-(c_{U_h},m),\notag\\
- U_A&=d_O+\sum_h\max_{\ell_h-x_h\leq m\leq u_h-x_h}
-                 S_+(c_{U_h},m),\label{eq:auditbounds}
-\end{align}
-where the optimization is over integers. Signed weights make this optimization
-necessary: an extreme need not occur at the largest admissible error count.
-
-\begin{proposition}[A simultaneous audit certificate]\label{prop:audit}
-Under the fixed stratified sampling design, the interval
-$[\widehat\theta-U_A,\widehat\theta-L_A]$ covers the fixed true contrast with
-probability at least $1-\delta$. The same event guarantees coverage for every
-linear contrast of this one label vector. The endpoints are sharp over the
-binary configurations satisfying the count intervals and all audited labels.
+Let $O$ contain the audited items and $\mathcal Y_A$ the binary label vectors
+that match their verified labels and whose error counts in each stratum lie
+in $[\ell_h,u_h]$. Its construction and the sorting formula for its extremes
+are in Appendix~\ref{app:audit}.
+\begin{proposition}[A simultaneous count certificate]\label{prop:audit}
+For any fixed item weights $w$, the interval
+$[\min_{z\in\mathcal Y_A}w^{\mathsf T}z,
+  \max_{z\in\mathcal Y_A}w^{\mathsf T}z]$
+covers the fixed target $w^{\mathsf T}y$ with probability at least
+$1-\delta$ over the audit design. The same event covers every linear contrast
+of this one label vector. Its endpoints are sharp given the audited labels
+and the count intervals.
 \end{proposition}
-\begin{proof}
-Inverting each pair of hypergeometric tails excludes the true $K_h$ with
-probability at most $\delta_h$. A union bound therefore includes all true
-counts with probability at least $1-\delta$. On that event, the true errors in
-$U_h$ number between $\ell_h-x_h$ and $u_h-x_h$. Sorting and choosing a count
-in that range gives the extrema in equation~\eqref{eq:auditbounds}; the choices
-are independent restrictions across strata and hence jointly attainable.
-The true label vector lies in the same configuration set for every choice of
-$w$, which establishes simultaneous coverage.
-\end{proof}
-The labels and predictions are fixed under this design: systematic or correlated
-classifier mistakes do not invalidate the guarantee. Coverage is over repeated
-audit samples, not conditional on the realized
-sampled identities. It requires neither independent classification errors nor
-a large-domain Gaussian approximation. The count confidence region can be
-conservative, and sharp projection of that region does not make the resulting
-confidence interval shortest. The guarantee concerns one outcome; combining
-separate audits of several outcomes requires an additional simultaneous-error
-allocation. Optional stopping, adaptive strata, and imperfect audit labels
-require further assumptions or other audit procedures.
+The certificate is simultaneous because the count event constrains the same
+label vector for every $w$. It can nevertheless be wide: it retains error
+counts but discards the weights attached to unaudited error locations.
+The example and full audit comparison in Appendix~\ref{app:audit} show this
+loss. Those simulations evaluate a design chosen for one coefficient; they
+do not establish efficient simultaneous auditing for other contrasts.
 
-\paragraph{The information discarded by count projection.}
-A large audit need not make these intervals narrow. To see this, let all $N$
-predictions equal one, half the weights equal $1/N$ and half equal $-1/N$.
-Suppose a fraction $p<1/2$ of labels in each half are wrong. The true contrast
-is zero. If $n\to\infty$ but $n/N\to0$, an unstratified audit consistently
-learns the overall error fraction. Yet unaudited errors can still be placed
-almost entirely on either weight sign: the projected interval width converges
-to $2p$. A direct estimate of the weighted audit residual instead has standard
-error of order $n^{-1/2}$. Separating the two weight signs into strata removes
-this particular information loss. The distinction is between estimating a
-weighted residual and bounding it after retaining only counts.
-
-For a declared contrast, an ordinary stratified difference estimator uses
-$z_j=w_j(y_j-q_j)$ directly:
-\begin{equation}\label{eq:stratified}
+For one declared contrast, a stratified difference estimator instead keeps
+the audited item identities and their weighted residuals:
+\begin{equation}\label{eq:directaudit}
  \widetilde\theta=\widehat\theta+
- \sum_h\frac{M_h}{n_h}\sum_{j\in O_h}z_j,\qquad
- \widehat V=\sum_h\frac{M_h^2(1-n_h/M_h)}{n_h}s_{z,h}^2,
+ \sum_h\frac{M_h}{n_h}\sum_{j\in O_h}w_j(y_j-q_j).
 \end{equation}
-where $s_{z,h}^2$ is the sample variance and a census stratum contributes zero
-variance. Under independent stratum draws, the estimate and variance estimator
-are design unbiased, with at least two audited domains in each noncensus
-stratum. Normal intervals need a separate approximation. A conservative
-finite-sample alternative applies Hoeffding's without-replacement inequality
-\citep{hoeffding1963} to each bounded residual mean and sums the stratum radii.
-More efficient weighted audit procedures are available \citep{shekhar2023audits}.
-The count certificate is useful for interpreting validation summaries and
-covering many comparisons together, not a general replacement for direct
-inference about a chosen comparison.
+With fixed predictions and verified labels, this estimator is design
+unbiased. A normal interval needs a separate approximation. The conservative
+finite-sample Hoeffding interval in the appendix is wide in this application;
+the paper does not establish an efficient finite-sample interval or an
+optimal audit allocation. The distinction here is between preserving the
+locations of audited errors and reducing them to counts.
+
+\section{What calibrated scores would add}\label{sec:calibration}
+The bounds from exact target-item confusion counts and the probability audit
+above condition on fixed predictions and labels. Neither requires calibrated
+classifier scores. The audit needs a known probability-sampling design for
+target items and verified labels for the sampled items. If the
+error counts come instead from a separate validation collection, applying them
+to the target items requires a transport assumption, whether or not that
+collection's scores are calibrated.
+
+A score-based plug-in uses a different source of information. Let
+$p_j\in[0,1]$ be a score intended to represent the probability that target
+item $j$ has label one, and put $\theta_p=w^{\mathsf T}p$. To interpret this as
+a conditional mean, introduce a model in which the labels are random given
+information $\mathcal I$ containing the scores and the target weights. Write
+$\mu_j=\E[y_j\mid\mathcal I]$. Then
+\begin{equation}\label{eq:scorebias}
+ \E[\theta_p-\theta\mid\mathcal I]
+ =w^{\mathsf T}(p-\mu).
+\end{equation}
+The plug-in equals $\E[\theta\mid\mathcal I]$ if and only if this weighted
+error is zero. A sufficient condition is $p_j=\Pr(y_j=1\mid\mathcal I)$ for
+each target item. For a particular target, offsetting score errors can also
+make the weighted sum zero without item-level conditional calibration.
+
+Ordinary calibration, $\Pr(y=1\mid p=s)=s$ across items, is weaker. For
+example, let half the items have label one and weight one, and the other half
+have label zero and weight zero. Give every item score $1/2$. The scores are
+empirically calibrated in the unweighted item collection, but $\theta_p$ is only
+half of the realized target. Conditioning on features that distinguish the
+two weight groups, or directly checking the weighted residual, exposes the
+failure. Calibration assessed on a separate collection also has to transfer
+to the target items and their label definition.
+
+For a browsing visit share, $w_j=v_j/\sum_\ell v_\ell$ gives
+$\theta_p=\sum_jv_jp_j/\sum_jv_j$. Conditional probabilities for the specified
+content label would make this the model's expected visit share. A group
+contrast or regression coefficient has different, possibly signed weights;
+its required weighted score condition changes accordingly.
+
+Even valid target-item conditional probabilities identify a conditional
+expectation, not the realized finite-item target. Under the conditional-label
+model, uncertainty around that expectation depends on the joint distribution:
+\begin{equation}\label{eq:scorevariance}
+ \Var(\theta\mid\mathcal I)
+ =w^{\mathsf T}\Cov(y\mid\mathcal I)w.
+\end{equation}
+Item-level calibration supplies neither the off-diagonal covariances nor, by
+itself, a coverage guarantee for an interval about the realized target.
+Estimating the scores introduces further uncertainty. These model-based claims
+are distinct from the fixed-label, design-based coverage of the audit.

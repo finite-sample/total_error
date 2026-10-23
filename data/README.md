@@ -1,4 +1,6 @@
-# Fixed browsing benchmark
+# Bundled research data
+
+## Fixed browsing benchmark
 
 The three bundled files reproduce the fewlab extract at original local commit
 `e360f6542c0e97c6b8819da6c17d5e08c1543762`, byte-for-byte. That original snapshot
@@ -36,3 +38,44 @@ keys, finite complete features/labels, nonnegative labels, and a full-rank desig
 Recorded scanner outcomes serve as fixed benchmark labels, not error-free truth
 about all forms of tracking. Predictions and their mistakes are deliberately
 imposed by the experiment; no result estimates a real classifier's performance.
+
+## Observed adult-domain classifications
+
+`adult_domains.csv.gz` is a derived extract of the public
+[`soodoku/adult`](https://github.com/soodoku/adult) repository at commit
+`f25d0c00a733450061c1f260c2890c9873a73d61`. It has 64,074 domains and
+6,236,834 visits from the June 2022 YouGov browsing study. Each row contains a
+SHA-256 domain identifier, its total visits, one Piedomains prediction, and up
+to three recorded provider categories. It contains no user-level records or
+domain names. Missing provider categories remain missing, not negative.
+The domain-name join matches 64,064 of 64,074 Piedomains rows; the remaining
+ten have no provider category.
+
+The source files are `data/piedomains_classification.csv.gz` (SHA-256
+`f847e21d19cd20ada82449e8438babf1879fce4badc47ca57465804a31d25ea6`)
+and `data/vt_domain_categories.csv` (SHA-256
+`0bde99f39e87a490b5b0d56fa28d51310b8bb3cc32e9a7dd897c549eef71ec75`).
+The [builder](../scripts/build_adult_input.py) verifies these hashes, joins
+`private_domain` to `domain`, and regenerates the bundled file with:
+
+```sh
+python3 scripts/build_adult_input.py /path/to/adult-checkout
+```
+
+The Piedomains indicator follows the adult repository's analysis rule:
+`pred_label == "porn"` and `label_prob >= 0.033`. The three reference indicators
+are exact category matches: Bitdefender `porn`, Forcepoint ThreatSeeker `sex`,
+and alphaMountain AI `Pornography`. These are alternate classification systems,
+not verified content labels. Their category definitions can differ. A recorded
+category other than the named positive one is coded zero, including nonspecific
+categories such as Bitdefender `misc` and alphaMountain `Unrated`; zero is not a
+verified negative content label. Each comparison restricts to domains with a
+recorded category from that provider and normalizes visit weights within that
+frame. The table therefore measures
+cross-system disagreement and the effect on visit-weighted shares, not either
+classifier's accuracy against truth. The three rows have different domain and
+visit coverage and should not be read as estimates on one common frame.
+`data/results/adult_head_sensitivity.csv` records the bounds after retaining
+both observed labels for the 0, 10, 50, 250, or 1,000 highest-visit domains in
+each provider frame. This is an information-loss calculation using existing
+classifications, not a verified-label audit.

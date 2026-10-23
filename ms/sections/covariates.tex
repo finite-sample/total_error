@@ -1,0 +1,47 @@
+\section{When an aggregate becomes a regression covariate}
+\label{sec:covariates}
+Counts and fixed-denominator proportions assembled from predicted labels are
+also common regression covariates. With fixed aggregation matrix $C$, their
+complete-label values are $T=Cy$ and their predicted values are $S=Cq$.
+Each component of $T$ is linear in item labels. A downstream statistic
+$F(T,Z)$ need not be: its exact plug-in error is
+$F(Cq,Z)-F(Cy,Z)$, where $Z$ denotes other fixed inputs. A denominator that
+depends on predicted labels makes even the underlying proportion nonlinear.
+The sharp count bounds in Section~\ref{sec:identification} therefore apply
+directly only when the declared target is linear in $y$.
+
+For example, let $Y$ be an observed outcome and $V$ a full-rank matrix of
+fully observed controls, including an intercept. The coefficient that
+ordinary least squares would report with complete item labels is
+\begin{equation}\label{eq:truecovariate}
+ \beta(y)=\frac{T^{\mathsf T}M_VY}{T^{\mathsf T}M_VT}
+ =\frac{y^{\mathsf T}C^{\mathsf T}M_VY}
+        {y^{\mathsf T}C^{\mathsf T}M_VCy},
+ \qquad M_V=I-V(V^{\mathsf T}V)^{-1}V^{\mathsf T},
+\end{equation}
+when the denominator is positive. Both numerator and denominator change
+when labels change, so ordinary attenuation is not a general conclusion.
+The exact error identity and item-audit moment formulas are in
+Appendix~\ref{app:covariates}. Those formulas do not provide an interval for
+$\beta(y)$: a ratio of estimated moments can be biased, unstable, or
+undefined.
+
+This setting intersects work on machine-generated regressors
+\citep{fong2021predictions,battaglia2025generated,kluger2025imputed}.
+\citet{battaglia2025generated} already study classification and aggregation
+into regression indices. The distinction examined here is a validation-design
+one: a verified item can inform many units' aggregates, but usually does not
+reveal any one unit's entire covariate. Methods requiring a sample of complete
+unit-level covariates need an audit that obtains them or an adaptation to
+item-level labels. For the coefficient in equation~\eqref{eq:truecovariate},
+that adaptation must account for item pairs in the quadratic denominator.
+
+A model-based target requires different assumptions. If information
+$\mathcal H$ contains $C,V$ and the prediction inputs, and
+$p_j=\E[y_j\mid\mathcal H]$, then $Cp=\E[T\mid\mathcal H]$.
+Under $Y=V\gamma+\beta T+\varepsilon$ with
+$\E[\varepsilon\mid\mathcal H]=0$ and a full-rank design, regressing $Y$
+on $(V,Cp)$ identifies the population $\beta$. Marginal score calibration
+across items does not establish these conditional means or the exclusion
+assumption. This population coefficient is also distinct from the fixed-sample
+complete-label coefficient in equation~\eqref{eq:truecovariate}.

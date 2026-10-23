@@ -1,0 +1,65 @@
+\section{Observed disagreement between domain classifiers}\label{sec:adult}
+The imposed-error experiment controls the number and locations of mistakes. A
+separate comparison uses observed outputs from the adult-domain study of
+\citet{sood2024holier}. Its public domain summary records \AdultVisits{} visits
+to \AdultDomains{} domains in the June 2022 YouGov panel. The study used a
+Piedomains rule that marks a domain when its predicted class is ``porn'' and
+its reported class probability is at least 0.033. We compare that rule with
+recorded ``porn'' categories from Bitdefender, ``sex'' from Forcepoint, and
+``Pornography'' from alphaMountain. Each row retains only domains with a
+recorded category from that provider, and visit shares use the visits in that
+row's frame as their denominator. Missing provider categories are not negative
+labels.
+
+\begin{table}[htbp]
+\centering\small
+\setlength{\tabcolsep}{3.5pt}
+\caption{Observed classifier disagreement and visit-weighted shares}
+\label{tab:adult}
+\input{../tabs/adult_table}
+\par\smallskip
+\begin{minipage}{\linewidth}\footnotesize
+Piedomains is the proxy in every row; the named provider supplies the reference
+category. ``Visits'' is the share of all \AdultVisits{} visits represented by
+domains with a recorded reference category. Agreement counts domains equally.
+``Domain +'' and ``Visit +'' list Piedomains/provider percentages, first for
+domains counted equally and then for visits within that row's frame. The
+count range is the sharp range of the provider visit share if only the two
+directional disagreement counts are kept, holding Piedomains labels and visit
+weights fixed. The providers use
+different category definitions; none is an adjudicated truth label.
+A recorded category other than the named positive one counts as negative for
+this comparison, including nonspecific categories such as ``misc.''
+\end{minipage}
+\end{table}
+
+On the \AdultFocalDomains{} domains categorized by Bitdefender, which account
+for \AdultFocalCoverage{}\% of visits, the two classifications agree on
+\AdultFocalAgreement{}\% of domains. Piedomains marks
+\AdultFocalProxyDomains{}\% of domains positive, compared with
+\AdultFocalReferenceDomains{}\% under Bitdefender's category. Their
+visit-weighted shares are \AdultFocalProxy{}\% and
+\AdultFocalReference{}\%, respectively. The discrepancy is visible before
+weighting domains by visits, so this comparison does not isolate an effect of
+visit concentration. There are \AdultFocalProxyOnly{} Piedomains-only and
+\AdultFocalReferenceOnly{} Bitdefender-only positive domains.
+
+With both classifications observed, the provider's visit share is known. If
+the disagreement locations were discarded and only their directional counts
+retained, its compatible range would be
+[\AdultFocalLower{}, \AdultFocalUpper{}]\%. A single Piedomains-negative
+domain carries \AdultFocalLargest{}\% of visits in this frame and can dominate
+the count-only upper bound. Appendix~\ref{app:adulthead} shows how that range
+changes when the observed label pairs of the most-visited domains are retained.
+This isolates information discarded by a confusion table; it does not
+establish that the extreme allocations are plausible classifier errors.
+
+This is a comparison between imperfect classification systems, not an estimate
+of either system's error against verified content labels. The public repository
+files used here do not include the person--domain matrix needed to apply the
+same calculation to the adult study's partisan coefficients. A probability
+audit of domains in that matrix, with an explicit content-labeling rule, would
+support a direct validation analysis of those coefficients without assuming
+calibrated scores. The reported Piedomains class probability and the provider
+categories alone do not establish the conditional probabilities required for
+the score plug-in in Section~\ref{sec:calibration}.

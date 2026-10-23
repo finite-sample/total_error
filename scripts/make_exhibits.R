@@ -2,6 +2,8 @@ bounds <- read.csv("data/results/browsing_bounds.csv")
 metadata <- read.csv("data/results/browsing_metadata.csv")
 audit <- read.csv("data/results/audit_summary.csv")
 rare <- read.csv("data/results/rare_errors.csv")
+adult <- read.csv("data/results/adult_comparison.csv")
+adult_head <- read.csv("data/results/adult_head_sensitivity.csv")
 dir.create("tabs", showWarnings = FALSE)
 dir.create("figs", showWarnings = FALSE)
 number <- function(x, digits = 0) formatC(x, format = "f", digits = digits, big.mark = ",")
@@ -9,11 +11,14 @@ focal <- subset(bounds, outcome == "fb_pixel" & scale == "shares" &
                   coefficient == "gender_Female" & error_fraction == 0.01)
 small <- subset(audit, budget == 250 & head_fraction == 0 & method == "normal")
 large <- subset(audit, budget == 2000 & head_fraction == 0.5 & method == "normal")
+adult_focal <- subset(adult, reference == "bitdefender_porn")
+stopifnot(nrow(adult_focal) == 1)
 macros <- c(
   BenchmarkUsers = number(metadata$users), BenchmarkDomains = number(metadata$domains),
   BenchmarkRecords = number(metadata$records), BenchmarkVisits = number(metadata$visits),
   BenchmarkContrasts = number(metadata$coefficients * metadata$outcomes),
   FocalTruth = number(100 * focal$target, 3),
+  FocalRealizedError = number(100 * abs(focal$uniform_estimate - focal$target), 3),
   FocalLower = number(100 * focal$bound_lower, 2),
   FocalUpper = number(100 * focal$bound_upper, 2),
   FocalAdverseLower = number(100 * focal$adverse_lower, 2),
@@ -23,7 +28,21 @@ macros <- c(
   SmallAuditCoverageUpper = number(100 * small$coverage_upper, 1),
   LargeAuditCoverage = number(100 * large$coverage, 1),
   LargeAuditWidth = number(100 * large$mean_width, 2),
-  RareNormalCoverage = number(100 * rare$oracle_normal_coverage[rare$domains == 10000], 2)
+  RareNormalCoverage = number(100 * rare$oracle_normal_coverage[rare$domains == 10000], 2),
+  AdultDomains = number(64074), AdultVisits = number(6236834),
+  AdultFocalDomains = number(adult_focal$domains),
+  AdultFocalCoverage = number(100 * adult_focal$visit_coverage, 1),
+  AdultFocalAgreement = number(100 * adult_focal$domain_agreement, 1),
+  AdultFocalProxyDomains = number(100 * adult_focal$proxy_domain_share, 2),
+  AdultFocalReferenceDomains = number(100 * adult_focal$reference_domain_share, 2),
+  AdultFocalProxy = number(100 * adult_focal$proxy_visit_share, 2),
+  AdultFocalReference = number(100 * adult_focal$reference_visit_share, 2),
+  AdultFocalDifference = number(-100 * adult_focal$observed_difference, 2),
+  AdultFocalProxyOnly = number(adult_focal$proxy_only),
+  AdultFocalReferenceOnly = number(adult_focal$reference_only),
+  AdultFocalLargest = number(100 * adult_focal$largest_predicted_negative_visit_share, 1),
+  AdultFocalLower = number(100 * adult_focal$bound_lower, 2),
+  AdultFocalUpper = number(100 * adult_focal$bound_upper, 2)
 )
 writeLines(
   sprintf("\\newcommand{\\%s}{%s}", names(macros), macros),
@@ -38,18 +57,61 @@ selected <- subset(bounds, scale == "shares" & error_fraction == 0.01)
 rows <- vapply(names(labels), function(outcome) {
   x <- selected[selected$outcome == outcome, ]
   sprintf(
-    "%s & %d/%d & %d/%d & %.1f \\\\", labels[outcome],
-    sum(x$sign_certified), nrow(x), sum(x$reversal_possible), nrow(x),
+    "%s & %d/%d & %.2f & %.1f \\\\", labels[outcome],
+    sum(x$sign_certified), nrow(x),
+    100 * median(abs(x$uniform_estimate - x$target)),
     100 * median(x$bound_upper - x$bound_lower)
   )
 }, character(1))
 writeLines(
   c(
     "\\begin{tabular}{lrrr}", "\\toprule",
-    "Scanner outcome & Sign identified & Reversal possible & Median width (pp) \\\\",
+    paste0("Scanner outcome & Sign identified & Median realized ",
+           "error (pp) & Median bound width (pp) \\\\"),
     "\\midrule", rows, "\\bottomrule", "\\end{tabular}"
   ),
   "tabs/browsing_table.tex"
+)
+adult_rows <- vapply(seq_len(nrow(adult)), function(i) {
+  x <- adult[i, ]
+  sprintf(
+    "%s & %s & %.1f & %.1f & %.2f/%.2f & %.2f/%.2f & [%.2f, %.2f] \\\\",
+    x$label, number(x$domains), 100 * x$visit_coverage,
+    100 * x$domain_agreement,
+    100 * x$proxy_domain_share, 100 * x$reference_domain_share,
+    100 * x$proxy_visit_share, 100 * x$reference_visit_share,
+    100 * x$bound_lower,
+    100 * x$bound_upper
+  )
+}, character(1))
+writeLines(
+  c(
+    "\\begin{tabular}{lrrrrrr}", "\\toprule",
+    paste0(
+      "Reference & Domains & Visits (\\%) & Agree (\\%) & ",
+      "Domain + (\\%) & Visit + (\\%) & Count range (\\%) \\\\"
+    ),
+    "\\midrule", adult_rows, "\\bottomrule", "\\end{tabular}"
+  ),
+  "tabs/adult_table.tex"
+)
+head_rows <- vapply(seq_len(nrow(adult_head)), function(i) {
+  x <- adult_head[i, ]
+  sprintf(
+    "%s & %s & %.1f & [%.2f, %.2f] & %.2f \\\\",
+    adult$label[match(x$reference, adult$reference)],
+    number(x$domains_retained), 100 * x$visit_share_retained,
+    100 * x$bound_lower, 100 * x$bound_upper,
+    100 * x$bound_width
+  )
+}, character(1))
+writeLines(
+  c(
+    "\\begin{tabular}{lrrrr}", "\\toprule",
+    "Provider & Domains retained & Visits retained (\\%) & Count range (\\%) & Width (pp) \\\\",
+    "\\midrule", head_rows, "\\bottomrule", "\\end{tabular}"
+  ),
+  "tabs/adult_head_table.tex"
 )
 method_names <- c(
   count = "Count projection", normal = "Direct normal",
@@ -64,17 +126,19 @@ for (head in c(0, 0.5)) {
       x <- audit[keep, ]
       stopifnot(nrow(x) == 1)
       rows <- c(rows, sprintf(
-        "%s & %s & %s & %.1f & %.1f & %.1f \\\\",
+        "%s & %s & %s & %.1f & %.1f (%.2f) & %.1f & %.1f \\\\",
         if (head == 0) "Random" else "Half certainty", number(audit_budget), method_names[method],
-        100 * x$coverage, 100 * x$mean_width, 100 * x$certification
+        100 * x$coverage, 100 * x$mean_width, 100 * x$width_mcse,
+        100 * x$correct_sign, 100 * x$wrong_sign
       ))
     }
   }
 }
 writeLines(
   c(
-    "\\begin{tabular}{lr lrrr}", "\\toprule",
-    "Design & Budget & Interval & Coverage (\\%) & Width (pp) & Sign (\\%) \\\\",
+    "\\begin{tabular}{lrlrrrr}", "\\toprule",
+    paste0("Design & Budget & Interval & Coverage (\\%) & ",
+           "Width (pp; MCSE) & Correct sign (\\%) & Wrong sign (\\%) \\\\"),
     "\\midrule", rows, "\\bottomrule", "\\end{tabular}"
   ),
   "tabs/audit_table.tex"
@@ -123,10 +187,11 @@ writeLines(
 refinement <- read.csv("data/results/refinement_summary.csv")
 rows <- vapply(seq_len(nrow(refinement)), function(i) {
   x <- refinement[i, ]
-  sprintf("%d & %.1f & %.1f & %.1f \\\\", x$strata,
-          100 * x$known_width, 100 * x$mean_width, 100 * x$coverage)
+  sprintf("%d & %.1f & %.1f (%.2f) & %.1f \\\\", x$strata,
+          100 * x$known_width, 100 * x$mean_width,
+          100 * x$width_mcse, 100 * x$coverage)
 }, character(1))
 writeLines(c("\\begin{tabular}{rrrr}", "\\toprule",
-             "Strata & Exact-count width (pp) & Audit width (pp) & Coverage (\\%) \\\\",
+             "Strata & Exact-count width (pp) & Audit width (pp; MCSE) & Coverage (\\%) \\\\",
              "\\midrule", rows, "\\bottomrule", "\\end{tabular}"),
            "tabs/refinement_table.tex")

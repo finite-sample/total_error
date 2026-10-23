@@ -79,6 +79,27 @@ confusion_bounds <- function(predictions, weights, false_positives,
   )
 }
 
+bounds_with_known_labels <- function(predictions, weights, labels,
+                                     known) {
+  check_predictions(predictions, weights)
+  if (!is.numeric(labels) || length(labels) != length(predictions) ||
+        anyNA(labels) || any(!labels %in% 0:1)) {
+    stop("labels must be binary and match predictions.")
+  }
+  if (!is.logical(known) || length(known) != length(predictions) ||
+        anyNA(known)) {
+    stop("known must be a complete logical vector matching predictions.")
+  }
+  remaining <- !known
+  false_positives <- sum(predictions[remaining] == 1 & labels[remaining] == 0)
+  false_negatives <- sum(predictions[remaining] == 0 & labels[remaining] == 1)
+  fixed <- sum(weights[known] * labels[known])
+  fixed + confusion_bounds(
+    predictions[remaining], weights[remaining], false_positives,
+    false_negatives
+  )
+}
+
 # A simultaneous confidence region for error counts under stratified SRSWOR.
 # A census stratum can encode a certainty head fixed before observing labels.
 audit_counts <- function(predictions, sampled, labels, strata = predictions,

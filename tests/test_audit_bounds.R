@@ -61,6 +61,32 @@ for (row in seq_len(nrow(configurations))) {
   }
 }
 
+# Retained item labels plus tail confusion counts give sharp conditional bounds.
+for (prediction_row in seq_len(nrow(configurations))) {
+  predictions <- configurations[prediction_row, ]
+  for (truth_row in seq_len(nrow(configurations))) {
+    truth <- configurations[truth_row, ]
+    for (known_row in seq_len(nrow(configurations))) {
+      known <- as.logical(configurations[known_row, ])
+      remaining <- !known
+      compatible <- apply(configurations, 1, function(candidate) {
+        all(candidate[known] == truth[known]) &&
+          sum(predictions[remaining] == 1 & candidate[remaining] == 0) ==
+            sum(predictions[remaining] == 1 & truth[remaining] == 0) &&
+          sum(predictions[remaining] == 0 & candidate[remaining] == 1) ==
+            sum(predictions[remaining] == 0 & truth[remaining] == 1)
+      })
+      for (weights in weight_sets) {
+        limits <- bounds_with_known_labels(
+          predictions, weights, truth, known
+        )
+        targets <- drop(configurations[compatible, , drop = FALSE] %*% weights)
+        same(limits, range(targets))
+      }
+    }
+  }
+}
+
 # Signed prefix sums need optimization over counts, not only interval endpoints.
 weights <- c(-5, -2, 1, 6)
 for (lower in 0:4) {

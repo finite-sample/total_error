@@ -1,0 +1,107 @@
+\section{Repeated-prediction error and dependence}\label{app:prediction}
+For a fixed fitted classifier and fixed labels, $\Delta$ is fixed. To discuss
+bias and variance, specify a repeated-prediction process, such as repeated
+training samples, while fixing $y,w$ and the inputs that determine $w$.
+All moments below
+condition on this fixed design. Define $b=\E[e]$ and the full joint covariance
+$\Sigma=\Cov(e)$, without assuming independence across items. Then
+\begin{align}
+ \operatorname{Bias}(\widehat\theta)&=w^{\mathsf T}b,\notag\\
+ \Var(\Delta)&=w^{\mathsf T}\Sigma w
+ =\sum_jw_j^2\Sigma_{jj}
+   +2\sum_{j<\ell}w_jw_\ell\Sigma_{j\ell},\label{eq:targetmoments}\\
+ \E[\Delta^2]&=(w^{\mathsf T}b)^2+w^{\mathsf T}\Sigma w.
+ \label{eq:targetrisk}
+\end{align}
+Equations~\eqref{eq:estimand}--\eqref{eq:targetrisk} connect the research quantity
+to its item weights, systematic error, and uncertainty. Covariance between
+item errors enters the estimate's variance. Dependence alone does not determine
+bias; systematic errors on items with nonzero weights can make
+$w^{\mathsf T}b$ nonzero.
+
+Browsing totals and regression vectors are corresponding joint quantities.
+Writing $\widehat T=Cq$, $d=\widehat T-T$, and $\widehat\beta=ACq$ gives
+\begin{align}
+ d&=Ce,\label{eq:identity}\\
+ \E[d]&=Cb, & \Cov(d)&=C\Sigma C^{\mathsf T},\label{eq:moments}\\
+ \E[\widehat\beta-\beta^*]&=ACb,
+ &\Cov(\widehat\beta-\beta^*)&=AC\Sigma C^{\mathsf T}A^{\mathsf T}.
+ \label{eq:regression}
+\end{align}
+The same item error is reused across all visits and users. These formulas
+quantify the specified prediction-error process; they do not include browsing-log
+error, user sampling, or uncertainty about the construct. They concern predicted
+exposure as an outcome. Noisy exposure as a regressor is a different
+errors-in-variables problem treated in Section~\ref{sec:covariates}.
+
+\subsection{Dependence follows the item weights}
+There are two sources of dependence. An item's predicted label can be reused
+across records, and different items can be classified by the same fitted model.
+Shared training data, model parameters, and similar item features can cause
+errors to move together under repeated fitting. Distinct items do not establish
+independent errors. In browsing, users need not visit the same domains to have
+correlated measurement errors: errors on different visited domains can covary.
+In equation~\eqref{eq:targetmoments}, positively correlated mistakes increase
+variance when their item weights have the same sign, and decrease it when
+the weights have opposite signs.
+
+For a limiting example, suppose centered errors are shared within item
+families: $e_j-b_j=u_{g(j)}$, with independent family shocks $u_g$ of variance
+$\tau_g^2$. This is compatible with binary predictions when the classifier
+assigns one common random prediction to every item in a family. Then
+\begin{equation}\label{eq:families}
+ \Var(\Delta)=\sum_g\tau_g^2
+                 \left(\sum_{j:g(j)=g}w_j\right)^2.
+\end{equation}
+A family of $m$ items with unit weights contributes $m^2\tau_g^2$, whereas
+assuming independent item errors would give $m\tau_g^2$. Signed weights can
+instead cancel within a family. The relevant concentration is in aggregate
+family influence, not just individual item influence. This example is a
+special covariance structure, not an assertion that the right families are
+known or that all within-family mistakes are perfectly correlated.
+
+Independent item errors are another special case: $\Sigma$ is diagonal,
+with entries $v_j$. For browsing totals, equation~\eqref{eq:moments} reduces to
+\begin{equation}\label{eq:covariance}
+ \Var(d_i)=\sum_jc_{ij}^2v_j,\qquad
+ \Cov(d_i,d_\ell)=\sum_jc_{ij}c_{\ell j}v_j.
+\end{equation}
+Let $\alpha_j$ be the false-positive probability on a truly negative item
+and $\beta_j$ the false-negative probability on a truly positive item.
+For binary predictions, $v_j=\alpha_j(1-\alpha_j)$ on negative items and
+$v_j=\beta_j(1-\beta_j)$ on positive items. In browsing, repeated visits multiply one
+classification error; treating visits as independent would incorrectly replace
+squared visit weights by visit counts. Even this special case induces dependence
+across users who share uncertain domains.
+
+An uncertainty procedure must follow the same structure as the estimand.
+Resampling downstream records while holding predictions fixed does not propagate
+repeated-training uncertainty. Each replicate must preserve reused labels across
+records and the joint distribution of errors across items. Independently
+perturbing each item label imposes a diagonal $\Sigma$; resampling the classifier
+fit and predicting all items together can preserve dependence induced by that
+fitting process, provided the resampling scheme represents that process.
+A prediction-error covariance cannot simply be added to an arbitrary reported
+regression covariance: the components may overlap or be dependent. Neither
+larger downstream samples nor clustering records alone guarantees that this error
+disappears,
+and standard errors do not repair bias.
+
+\subsection{Many items do not ensure a normal approximation}
+Even with independent item errors, diffuse variance shares alone do not
+justify Gaussian inference. Let all true labels be zero and let each of $k$
+items be falsely labeled positive independently with probability $1/k$.
+With $w_j=1$, total error $B_k$ is binomial with mean one and variance $1-1/k$.
+The largest item variance share is $1/k$, yet
+$B_k-1\Rightarrow\operatorname{Poisson}(1)-1$, not a normal distribution.
+At $k=10{,}000$, an oracle interval using the exact bias and variance but a
+normal 1.96 cutoff has coverage \RareNormalCoverage{}\%. This calculation
+uses exact binomial probabilities, not simulation.
+
+For independent bounded binary errors, a sufficient Lindeberg condition is
+\[\frac{\max_j|w_j|}{\sqrt{\sum_jw_j^2v_j}}\to0.\]
+A small maximum variance share
+$\max_j w_j^2v_j/\sum_jw_j^2v_j$ is weaker when errors become rare. The example
+violates the former condition and satisfies the latter. A growing number of
+items cannot substitute for a condition on the distribution of their errors.
+This is a prediction-error example, distinct from the fixed-label audit design.

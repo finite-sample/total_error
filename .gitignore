@@ -6,6 +6,8 @@
 .Ruserdata
 .Renviron
 .Rproj.user/
+__pycache__/
+*.py[cod]
 
 # Knitr intermediates
 *_cache/
