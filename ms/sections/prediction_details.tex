@@ -34,16 +34,20 @@ error, user sampling, or uncertainty about the construct. They concern predicted
 exposure as an outcome. Noisy exposure as a regressor is a different
 errors-in-variables problem treated in Section~\ref{sec:covariates}.
 
-\subsection{Dependence follows the item weights}
-There are two sources of dependence. An item's predicted label can be reused
-across records, and different items can be classified by the same fitted model.
-Shared training data, model parameters, and similar item features can cause
-errors to move together under repeated fitting. Distinct items do not establish
-independent errors. In browsing, users need not visit the same domains to have
-correlated measurement errors: errors on different visited domains can covary.
-In equation~\eqref{eq:targetmoments}, positively correlated mistakes increase
-variance when their item weights have the same sign, and decrease it when
-the weights have opposite signs.
+\subsection{Shared labels and correlated item errors}
+These are separate mechanisms under a repeated-prediction model. First, a
+single item error can appear in several users' aggregates. Even if the item
+errors $e_j$ are independent across $j$, users who share an uncertain item
+can have correlated aggregate errors. This is a standard common-shock
+structure, analogous to shift-share inference \citep{adao2019}; it does not
+assert correlation between distinct item errors. Second, distinct item errors
+may themselves covary under repeated fitting. Shared training data or model
+parameters can produce such covariance, but using one fitted classifier does
+not by itself establish it. Users who visit disjoint domains can have
+correlated aggregate errors only under this second mechanism or another
+shared source of uncertainty. In equation~\eqref{eq:targetmoments}, positively
+correlated item errors increase variance when their weights have the same
+sign, and decrease it when their weights have opposite signs.
 
 For a limiting example, suppose centered errors are shared within item
 families: $e_j-b_j=u_{g(j)}$, with independent family shocks $u_g$ of variance

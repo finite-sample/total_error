@@ -71,6 +71,8 @@ random checks to control weighted error
 \citep{stark2008audits,shekhar2023audits}. Machine-generated covariates,
 including indices assembled from classifications, are studied in regression
 \citep{fong2021predictions,battaglia2025generated,kluger2025imputed}.
+Reuse of an uncertain item across records has the same common-shock covariance
+structure familiar from shift-share designs \citep{adao2019}.
 These results motivate a narrower question: for one declared estimate and a
 fixed set of target items, what does a particular validation summary actually
 establish? Reused labels and signed comparison weights make that question
@@ -147,10 +149,12 @@ For fixed labels and a fixed fitted classifier, $\Delta$ is fixed.
 If the question instead concerns repeated training and prediction, let
 $b=\E[q-y]$ and $\Sigma=\Cov(q-y)$ under that process while holding $y,w$
 fixed. Then $\E[\Delta]=w^{\mathsf T}b$ and
-$\Var(\Delta)=w^{\mathsf T}\Sigma w$. Shared items and correlated
-classifier errors enter through these weights and covariances. They require
-a model of repeated prediction; the count bounds and probability audit below
-condition on the realized predictions instead. Appendix~\ref{app:prediction}
+$\Var(\Delta)=w^{\mathsf T}\Sigma w$. Reusing one uncertain item can make
+errors in different users' aggregates covary even if errors across distinct
+items are independent. Distinct item errors may also covary, but reuse alone
+does not imply that they do. These moments require a model of repeated
+prediction; the count bounds and probability audit below condition on the
+realized predictions instead. Appendix~\ref{app:prediction}
 gives the covariance details and a rare-error example showing why many items
 alone do not justify a normal approximation.
 
@@ -182,7 +186,7 @@ appear in Appendix~\ref{app:rates}.
 
 \begingroup
 \small
-\setlength{\bibsep}{3pt}
+\setlength{\bibsep}{1pt}
 \urlstyle{same}
 \raggedright
 \bibliographystyle{plainnat}

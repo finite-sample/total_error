@@ -14,6 +14,9 @@ Under a stated prediction-error process, its bias is `w'b`, its variance is
 `w'Σw`, and its mean squared error is `(w'b)² + w'Σw`. The full covariance `Σ`
 allows errors across items to be correlated. Reusing one prediction in several
 records also transmits its error to every estimate involving those records.
+Under a repeated-prediction model, this can correlate aggregate errors across
+records even when distinct item errors are independent. Correlation between
+distinct item errors is a separate assumption, not a consequence of reuse.
 
 When a sum or fixed-denominator proportion of predicted labels is used as a
 regression covariate, its error is the corresponding sum of item errors. The
