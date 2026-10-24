@@ -41,7 +41,9 @@ exact confusion counts and show when those counts identify the estimate.
 A probability audit of target items yields a simultaneous count-based
 confidence certificate, while a direct audit retains the weighted residuals
 needed for a particular estimate. In a browsing-data stress test, exact error
-counts leave the signs of 84 group comparisons unresolved. A separate
+counts leave the signs of 84 group comparisons unresolved. Its user--domain
+matrix also shows how record-level independence can misstate prediction-error
+uncertainty even with independent domain errors. A separate
 comparison of adult-domain classifiers shows similar information loss with
 observed disagreements, without treating either classifier as truth. I also
 distinguish these fixed-label results from score plug-ins, which need relevant
@@ -314,9 +316,37 @@ denominator is positive, the exact error is
 The quadratic term can remain when first-order terms cancel, and the
 coefficient can move in either direction.
 
+The conventional OLS score makes the two channels explicit. Write
+$a=C^{\mathsf T}M_VY$, $G=C^{\mathsf T}M_VC$, and
+$U(z;\beta)=z^{\mathsf T}a-\beta z^{\mathsf T}Gz$. For the fixed-sample
+complete-label coefficient $\beta^*=\beta(y)$, $U(y;\beta^*)=0$, whereas
+\begin{equation}\label{eq:covariatescore}
+ U(q;\beta^*)
+ =e^{\mathsf T}(a-2\beta^*Gy)-\beta^*e^{\mathsf T}Ge,
+ \qquad e=q-y.
+\end{equation}
+If repeated predictions are meaningful while $y,C,V,Y$ remain fixed, let
+$b=\E[e]$ and $\Sigma=\Cov(e)$. Then
+\begin{equation}\label{eq:expectedscore}
+ \E[U(q;\beta^*)]
+ =b^{\mathsf T}(a-2\beta^*Gy)
+  -\beta^*\{b^{\mathsf T}Gb+\operatorname{tr}(G\Sigma)\}.
+\end{equation}
+The trace term equals $\operatorname{tr}(M_VC\Sigma C^{\mathsf T})$.
+With independent item errors it is
+$\sum_jv_j\|M_VC_{\cdot j}\|^2$: each domain's contribution depends on
+variation in its user incidence after removing the controls. It is
+nonnegative, but the other terms in equation~\eqref{eq:expectedscore} can
+have either sign, and an expected score is not the expectation of the OLS
+coefficient. In particular, ordinary attenuation does not follow. For
+fixed binary $y$ and hard binary $q$, nontrivial errors cannot have $b=0$
+item by item: a negative item can only have a positive error, and a positive
+item can only have a negative one. Mean-zero error is thus not a harmless
+default for this prediction process.
+
 The fixed-sample coefficient in equation~\eqref{eq:truecovariate} has a linear
 numerator and a quadratic denominator in the item labels. Put
-$a=C^{\mathsf T}M_VY$, $G=C^{\mathsf T}M_VC$, and $r=y-q$. Then
+$r=y-q$. Then
 \begin{align}
  N&=y^{\mathsf T}a=q^{\mathsf T}a+r^{\mathsf T}a,\notag\\
  D&=y^{\mathsf T}Gy=q^{\mathsf T}Gq+2r^{\mathsf T}Gq+r^{\mathsf T}Gr.

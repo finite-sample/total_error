@@ -65,6 +65,21 @@ counts fail to rule out for this frame, not what a fitted classifier is likely
 to do. Total coefficients and larger imposed error fractions are in the
 replication results.
 
+\paragraph{How much does domain reuse matter for uncertainty?}
+The incidence matrix permits a separate diagnostic without fitting a
+classifier. Suppose each domain's prediction error is independent of the
+others and has the same variance, as under independent binary flips with an
+equal false-positive and false-negative probability. Equation~\eqref{eq:overlapratio}
+compares the prediction-error variance of a linear user statistic with a
+calculation that keeps each user's marginal error variance but discards
+covariance between users. For the mean visit share the variance ratio is
+\MeanShareVarianceRatio{}, and one domain accounts for
+\MeanShareLargestItem{}\% of the item-level variance under this model.
+The female and Black share-coefficient ratios are
+\FemaleShareVarianceRatio{} and \BlackShareVarianceRatio{}: shared domain
+errors can cancel in signed contrasts. These ratios describe the observed
+weights under stipulated errors, not uncertainty for a fitted classifier.
+
 \paragraph{An audit can retain more.}
 Appendix~\ref{app:audit} evaluates count projection and direct weighted
 residual estimation on the same probability-audit draws for one declared

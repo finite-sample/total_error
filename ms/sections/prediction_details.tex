@@ -78,6 +78,22 @@ classification error; treating visits as independent would incorrectly replace
 squared visit weights by visit counts. Even this special case induces dependence
 across users who share uncertain domains.
 
+For a fixed linear user contrast $a^{\mathsf T}d$, equal item-error variances
+give a simple overlap diagnostic:
+\begin{equation}\label{eq:overlapratio}
+ R(a,C)=
+ \frac{\sum_j(\sum_i a_i c_{ij})^2}
+      {\sum_i a_i^2\sum_jc_{ij}^2}.
+\end{equation}
+The numerator is its variance, apart from the common variance factor. The
+denominator is what that variance would be if each user's aggregate error
+were independent while retaining its marginal variance. Thus $R$ measures
+the effect of discarding covariance across users for this one prediction-error
+component. It is at least one for nonnegative weights and counts, but may be
+above or below one for a signed contrast. It is not a general standard-error
+correction: unequal item variances, correlated item errors, user sampling,
+and other errors require their own treatment.
+
 An uncertainty procedure must follow the same structure as the estimand.
 Resampling downstream records while holding predictions fixed does not propagate
 repeated-training uncertainty. Each replicate must preserve reused labels across

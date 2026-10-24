@@ -79,4 +79,38 @@ assert_close(drop(crossprod(mass, estimates)), c(
 assert_close(truth_coefficient, true_numerator / true_denominator)
 ratio_expectation <- sum(mass * estimates[, 1] / estimates[, 2])
 stopifnot(abs(ratio_expectation - truth_coefficient) > 0.01)
+
+# Independent item mistakes still induce dependent user-level errors.
+flip_probability <- 0.2
+prediction_probability <- ifelse(labels == 1, 1 - flip_probability,
+                                 flip_probability)
+prediction_mass <- apply(draws, 1, function(q) {
+  prod(ifelse(q == 1, prediction_probability,
+              1 - prediction_probability))
+})
+error_draws <- sweep(draws, 2, labels)
+score <- apply(draws, 1, function(q) {
+  sum(q * linear_weights) - truth_coefficient *
+    drop(crossprod(q, quadratic_weights %*% q))
+})
+bias <- ifelse(labels == 1, -flip_probability, flip_probability)
+variance <- rep(flip_probability * (1 - flip_probability), length(labels))
+expected_score <- sum(bias * (linear_weights - 2 * truth_coefficient *
+                                drop(quadratic_weights %*% labels))) -
+  truth_coefficient * (drop(crossprod(
+    bias, quadratic_weights %*% bias
+  )) + sum(diag(quadratic_weights) * variance))
+assert_close(sum(prediction_mass * score), expected_score)
+mean_weights <- rep(1 / nrow(visits), nrow(visits))
+item_weights <- drop(crossprod(visits, mean_weights))
+actual_variance <- sum(variance * item_weights^2)
+independent_row_variance <- sum(mean_weights^2 *
+                                  drop((visits^2) %*% variance))
+drawn_error <- drop(error_draws %*% item_weights)
+assert_close(sum(prediction_mass *
+                   (drawn_error - sum(prediction_mass * drawn_error))^2),
+             actual_variance)
+assert_close(actual_variance / independent_row_variance,
+             sum(item_weights^2) /
+               sum(mean_weights^2 * rowSums(visits^2)))
 cat("Aggregated-covariate regression and audit moment checks passed.\n")

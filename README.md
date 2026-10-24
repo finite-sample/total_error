@@ -22,7 +22,7 @@ When a sum or fixed-denominator proportion of predicted labels is used as a
 regression covariate, its error is the corresponding sum of item errors. The
 regression coefficient itself is nonlinear in those labels: the true covariate
 appears in both its numerator and denominator. The paper derives that
-coefficient error, distinguishes item-level from complete unit-level
+coefficient error and the plug-in OLS score, distinguishes item-level from complete unit-level
 validation, and gives probability-audit corrections for the numerator and
 denominator separately. A general transformation can be evaluated over the
 labels compatible with an audit, but the linear-target bounds do not
@@ -33,7 +33,9 @@ The regression discussion situates this construction alongside
 regression calibration, and prediction-powered inference. Battaglia and
 coauthors already study classification followed by aggregation into a
 regression index; the paper focuses on the implications of item reuse and
-item-level validation.
+item-level validation. The reuse mechanism is also familiar from
+[shift-share inference](https://www.princeton.edu/~mkolesar/papers/shift_share.pdf),
+so the covariance algebra is not claimed as a new regression method.
 
 The [paper](ms/main.pdf) characterizes the sharp range of a comparison given
 exact confusion counts and shows when those counts suffice. It distinguishes
@@ -54,7 +56,12 @@ Exposure shares first normalize the rows of `C`; regression coefficients supply
 twelve demographic coefficients, visit totals and shares, and three imposed error
 fractions. It is a stress test with deliberately generated mistakes, not an
 evaluation of a trained classifier. One contrast compares three audit intervals
-on common samples. The [data documentation](data/README.md) states the analytic
+on common samples. A separate calculation uses the observed user-domain matrix
+and stipulates independent, equal-variance domain errors. For the mean visit
+share, the implied prediction-error variance is 323.4 times the value obtained
+by discarding covariance across users; for signed demographic coefficients the
+ratio can lie on either side of one. This is a design diagnostic, not an
+uncertainty estimate for a fitted classifier. The [data documentation](data/README.md) states the analytic
 frame, transformations, redistribution provenance, and limits of the reference
 labels.
 

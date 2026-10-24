@@ -29,12 +29,27 @@ undefined.
 This setting intersects work on machine-generated regressors
 \citep{fong2021predictions,battaglia2025generated,kluger2025imputed}.
 \citet{battaglia2025generated} already study classification and aggregation
-into regression indices. The distinction examined here is a validation-design
-one: a verified item can inform many units' aggregates, but usually does not
-reveal any one unit's entire covariate. Methods requiring a sample of complete
-unit-level covariates need an audit that obtains them or an adaptation to
-item-level labels. For the coefficient in equation~\eqref{eq:truecovariate},
-that adaptation must account for item pairs in the quadratic denominator.
+into regression indices. Here a single predicted domain label is reused in
+many people's indices. This creates the same overlap structure as a
+shift-share regressor \citep{adao2019}: if item errors are random, independent
+across domains, and have variances $v_j$, then the error in two people's
+covariates has covariance $\sum_j c_{ij}c_{\ell j}v_j$. Independence of the
+item errors therefore does not give independence of the regression rows.
+The overlap can matter in either direction for a coefficient. A domain
+visited equally by everyone affects their totals, but its error disappears
+from a regression with an intercept because $M_VC_{\cdot j}=0$.
+
+There is also a generated-regressor issue beyond the covariance of the rows.
+The OLS numerator is linear in the labels but its denominator contains
+$G=C^{\mathsf T}M_VC$, including interactions between labels of domains
+visited by the same people. Appendix~\ref{app:covariates} gives the exact
+plug-in score and its expectation under a specified prediction-error process.
+A verified domain can inform many units' aggregates, but usually does not
+reveal any one unit's entire covariate. Methods requiring complete covariates
+for sampled regression rows therefore need a different validation design or
+an adaptation to item-level labels. For equation~\eqref{eq:truecovariate},
+an item audit must account for item pairs in the quadratic denominator;
+correcting each aggregate separately is not enough.
 
 A model-based target requires different assumptions. If information
 $\mathcal H$ contains $C,V$ and the prediction inputs, and

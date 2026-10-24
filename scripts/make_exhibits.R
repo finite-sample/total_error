@@ -1,5 +1,6 @@
 bounds <- read.csv("data/results/browsing_bounds.csv")
 metadata <- read.csv("data/results/browsing_metadata.csv")
+overlap <- read.csv("data/results/browsing_overlap.csv")
 audit <- read.csv("data/results/audit_summary.csv")
 rare <- read.csv("data/results/rare_errors.csv")
 adult <- read.csv("data/results/adult_comparison.csv")
@@ -13,10 +14,22 @@ small <- subset(audit, budget == 250 & head_fraction == 0 & method == "normal")
 large <- subset(audit, budget == 2000 & head_fraction == 0.5 & method == "normal")
 adult_focal <- subset(adult, reference == "bitdefender_porn")
 stopifnot(nrow(adult_focal) == 1)
+overlap_value <- function(coefficient, field) {
+  x <- overlap[overlap$scale == "shares" &
+                 overlap$coefficient == coefficient, ]
+  stopifnot(nrow(x) == 1)
+  x[[field]]
+}
 macros <- c(
   BenchmarkUsers = number(metadata$users), BenchmarkDomains = number(metadata$domains),
   BenchmarkRecords = number(metadata$records), BenchmarkVisits = number(metadata$visits),
   BenchmarkContrasts = number(metadata$coefficients * metadata$outcomes),
+  MeanShareVarianceRatio = number(overlap_value("mean", "variance_ratio"), 1),
+  FemaleShareVarianceRatio = number(overlap_value("gender_Female", "variance_ratio"), 2),
+  BlackShareVarianceRatio = number(overlap_value("race_Black", "variance_ratio"), 2),
+  MeanShareLargestItem = number(
+    100 * overlap_value("mean", "largest_item_variance_share"), 1
+  ),
   FocalTruth = number(100 * focal$target, 3),
   FocalRealizedError = number(100 * abs(focal$uniform_estimate - focal$target), 3),
   FocalLower = number(100 * focal$bound_lower, 2),

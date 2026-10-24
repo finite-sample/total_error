@@ -54,6 +54,32 @@ metadata <- data.frame(
   seed = 20261004
 )
 write.csv(metadata, "data/results/browsing_metadata.csv", row.names = FALSE)
+
+# Compare item-level variance with a calculation that discards shared domains.
+projection <- solve(crossprod(panel$design), t(panel$design))
+overlap <- list()
+for (scale in c("counts", "shares")) {
+  incidence <- panel[[scale]]
+  for (coefficient in c("mean", colnames(panel$design)[-1])) {
+    weights <- if (coefficient == "mean") {
+      rep(1 / nrow(incidence), nrow(incidence))
+    } else {
+      as.numeric(projection[coefficient, ])
+    }
+    item_weights <- as.numeric(crossprod(incidence, weights))
+    item_variance <- sum(item_weights^2)
+    independent_row_variance <- sum(
+      weights^2 * Matrix::rowSums(incidence^2)
+    )
+    overlap[[length(overlap) + 1L]] <- data.frame(
+      scale = scale, coefficient = coefficient,
+      variance_ratio = item_variance / independent_row_variance,
+      largest_item_variance_share = max(item_weights^2) / item_variance
+    )
+  }
+}
+write.csv(do.call(rbind, overlap), "data/results/browsing_overlap.csv",
+          row.names = FALSE)
 print(aggregate(
   cbind(sign_certified, reversal_possible) ~ scale + error_fraction,
   results, mean
