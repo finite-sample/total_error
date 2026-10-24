@@ -1,4 +1,4 @@
-# Reused Predicted Labels in Aggregates and Regression
+# One Label, Many Records: Shared Prediction Error in Regression
 
 The [paper](ms/main.pdf) studies predictions reused across records and across
 constructed variables. Distinct item labels `y` generate record-level measures
