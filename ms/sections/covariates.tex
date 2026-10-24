@@ -30,29 +30,28 @@ This setting intersects work on machine-generated regressors
 \citep{fong2021predictions,battaglia2025generated,kluger2025imputed}.
 \citet{battaglia2025generated} already study classification and aggregation
 into regression indices. \citet{kluger2025imputed} allow nonuniform sampling
-of complete regression observations; a verified domain in the present setting
-usually supplies only a piece of many observations. Here a single predicted
-domain label is reused in
-many people's indices. This creates the same overlap structure as a
+of complete regression observations; verifying a reusable item here
+usually supplies only a piece of many observations. A single predicted item
+label can enter several units' indices. This creates the same overlap structure as a
 shift-share regressor \citep{adao2019}: if item errors are random, independent
-across domains, and have variances $v_j$, then the error in two people's
+across items, and have variances $v_j$, then the error in two units'
 covariates has covariance $\sum_j c_{ij}c_{\ell j}v_j$. Independence of the
 item errors therefore does not give independence of the regression rows.
-The overlap can matter in either direction for a coefficient. A domain
-visited equally by everyone affects their totals, but its error disappears
+The overlap can matter in either direction for a coefficient. An item
+with the same weight in every unit affects their totals, but its error disappears
 from a regression with an intercept because $M_VC_{\cdot j}=0$.
 
 There is also a generated-regressor issue beyond the covariance of the rows.
 The OLS numerator is linear in the labels but its denominator contains
-$G=C^{\mathsf T}M_VC$, including interactions between labels of domains
-visited by the same people. Appendix~\ref{app:covariates} gives the exact
+$G=C^{\mathsf T}M_VC$, including cross-products of items that enter the
+same units after residualizing on controls. Appendix~\ref{app:covariates} gives the exact
 plug-in score and its expectation under a specified prediction-error process.
 If the same predictions build two or more covariates, their measurement errors
 also enter the off-diagonal cross-products of the regression's normal
 equations. In that case there need not be a single attenuation factor: an
 error shared by two covariates can move both coefficients. The relevant
 cross-products are given in Appendix~\ref{app:covariates}.
-A verified domain can inform many units' aggregates, but usually does not
+A verified item can inform many units' aggregates, but usually does not
 reveal any one unit's entire covariate. Methods requiring complete covariates
 for sampled regression rows therefore need a different validation design or
 an adaptation to item-level labels. The companion \texttt{fewlab} project

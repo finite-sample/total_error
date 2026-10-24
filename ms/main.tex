@@ -31,12 +31,12 @@ Code and history:
 \maketitle
 
 \begin{abstract}
-Researchers often reuse one predicted item label in many people's aggregates,
-then compare or regress those aggregates. With skewed usage, one mistake can
+Researchers often reuse one predicted item label across many records and
+construct several aggregates from those records. With skewed item use, one mistake can
 move several reported estimates together. A confusion matrix records how many
 mistakes occurred but loses their locations.
-This note asks what validation can establish about a fixed estimate built from
-such labels. For estimates linear in the labels, I give sharp bounds using
+This note asks what existing validation evidence can establish about estimates
+built from such labels. For estimates linear in the labels, I give sharp bounds using
 exact confusion counts and show when those counts identify the estimate.
 A probability sample of already-verified target items can provide a simultaneous
 count-based confidence certificate or a direct correction with a joint
@@ -48,15 +48,16 @@ comparison of adult-domain classifiers shows similar information loss with
 observed disagreements, without treating either classifier as truth. I also
 distinguish these fixed-label results from score plug-ins, which need relevant
 conditional mean assumptions, and from regression with aggregated predicted
-covariates, whose coefficient is nonlinear in the labels. The practical choice
-is what to validate, and how much of that evidence to retain, for the estimate
-the researcher intends to report.
+covariates, whose coefficient is nonlinear in the labels. The practical task
+is to match available validation evidence to the estimates and uncertainty
+claims the researcher intends to report.
 \end{abstract}
 
-Suppose a researcher classifies websites, documents, or other items, then
-sums those labels across people or records. The reported quantity might be a
-total, a difference in means, or a coefficient from regressing an aggregate
-outcome on observed covariates. The same label may enter many records, and its
+Suppose a researcher classifies reusable items, such as websites, merchants,
+products, or documents, and links their labels to observational units. The
+reported quantity might be a total, a difference in means, or a coefficient
+from regressing an aggregate outcome on observed covariates. The same label
+may enter many units and several reported statistics, and its
 influence depends on the particular quantity being estimated. Accuracy and
 the usual false-positive and false-negative rates count items; they do not
 record which influential items were misclassified. Knowing the exact
@@ -97,66 +98,70 @@ or a new regression estimator. Choosing which labels to acquire in the first
 place is the focus of the companion \texttt{fewlab} project
 \citep{sood2026fewlab}.
 
-\section{Start with the estimand}\label{sec:estimand}
-Let $y_j\in\{0,1\}$ be the reference label of item $j$, for $j=1,\ldots,k$.
-For fixed weights $w_j$, the target is
-\begin{equation}\label{eq:estimand}
- \theta=w^{\mathsf T}y=\sum_{j=1}^k w_jy_j.
-\end{equation}
-The weights can
-be positive for a total or signed for a comparison. They may come from a
-matrix that connects reusable labels to people, places, or records. The results
-below apply to quantities linear in the labels, conditional on that matrix and
-any other inputs used to construct $w$. Section~\ref{sec:covariates}
-discusses nonlinear downstream statistics built from the same aggregates.
+\section{Reusable labels and downstream targets}\label{sec:estimand}
+Let $y_j\in\{0,1\}$ be the reference label of item $j$, for
+$j=1,\ldots,k$, and let $q_j\in\{0,1\}$ be its prediction. An item can enter
+many observational units, and a unit can contain many items. A known matrix
+$C=(c_{ij})\in\mathbb R^{n\times k}$ records how item $j$ contributes to
+unit $i$'s construct. Its
+rows might represent people, households, places, or time periods; its columns
+might represent websites, merchants, products, employers, or documents.
+Entries can be counts, durations, expenditures, or fixed shares, according
+to the construct. The complete-label and prediction-based unit vectors are
+$T=Cy$ and $S=Cq$.
 
-Browsing supplies one such matrix. Let $C=(c_{ij})$ contain visits by $n$
-users to $k$ domains, with each domain serving as an item. The true exposure
-vector is $T=Cy$. For declared user weights $a$, the corresponding weights are
-\begin{equation}\label{eq:browsingweights}
- \theta=a^{\mathsf T}T=a^{\mathsf T}Cy=w^{\mathsf T}y,
+For declared fixed unit weights $a$, a linear target and its item weights are
+\begin{equation}\label{eq:estimand}
+ \theta=a^{\mathsf T}T=w^{\mathsf T}y
+       =\sum_{j=1}^k w_jy_j,
  \qquad w=C^{\mathsf T}a.
 \end{equation}
-For a difference of group means, $a_i=1/n_A$ in group $A$ and $a_i=-1/n_B$
-in group $B$. A single user's total sets that user's weight to one and all
-others to zero. For exposure shares, first replace $C$ by
-$\operatorname{diag}(V_1^{-1},\ldots,V_n^{-1})C$, where $V_i=\sum_jc_{ij}>0$;
-the same mapping then gives the domain weights for the chosen share comparison.
-Replacing visits by duration changes the exposure unit but not the mapping.
+The weights can be nonnegative for a total or signed for a comparison.
+Different analyses may use different matrices $C^{(r)}$ and unit weights
+$a^{(r)}$, while reusing the same predictions $q$. Each then has item weights
+$w^{(r)}=C^{(r)\mathsf T}a^{(r)}$. Fixed-denominator proportions fit this
+setup by absorbing the known denominator into the rows of $C^{(r)}$.
+If a denominator depends on unknown labels, or if the downstream statistic
+is nonlinear, its target instead has the form $F(C^{(1)}y,\ldots,C^{(R)}y,Z)$
+for other observed inputs $Z$; Section~\ref{sec:covariates} treats a
+regression example.
 
-Regression coefficients are also fixed linear functionals of the labels.
-For a full-rank demographic design $X$, write
-$A=(X^{\mathsf T}X)^{-1}X^{\mathsf T}$ and define the complete-label coefficient
-$\beta^*=ACy$. A coefficient contrast $r^{\mathsf T}\beta^*$ has user weights
-$a=A^{\mathsf T}r$ and domain weights $w=C^{\mathsf T}A^{\mathsf T}r$.
-These are descriptive coefficients for the specified browsing frame; causal or
+A regression of a label-derived outcome on a full-rank, fully observed design
+$X$ is still linear in the item labels. With
+$A=(X^{\mathsf T}X)^{-1}X^{\mathsf T}$, its complete-label coefficient is
+$\beta^*=ACy$. A coefficient contrast $r^{\mathsf T}\beta^*$ has unit weights
+$a=A^{\mathsf T}r$ and item weights $w=C^{\mathsf T}A^{\mathsf T}r$.
+These are descriptive coefficients for the specified frame; causal or
 population interpretations require additional assumptions. Throughout, the
-item weights and any matrices or regressors used to construct them are fixed.
-Their uncertainty, if relevant to the research question, requires an additional
-sampling model. Domain labels also define the browsing construct: they measure
-visits to domains with a given label, not necessarily consumption of that
-content on mixed-content sites.
+link matrices, unit weights, and fully observed regressors used to construct
+them are fixed. Their uncertainty, if relevant, requires another sampling
+model.
 
-Let $q\in\{0,1\}^k$ contain predicted labels, $q_j=\widehat y_j$, and let
-$e=q-y$. The prediction-based estimate is $\widehat\theta=w^{\mathsf T}q$,
+Browsing is one application. Here $c_{ij}$ can count visits by person $i$ to
+website $j$. A difference between group means gives each person in group
+$A$ weight $1/n_A$ and each in group $B$ weight $-1/n_B$. For browsing shares,
+divide each row of $C$ by its observed total visits before applying
+equation~\eqref{eq:estimand}. Replacing counts by duration changes the
+exposure unit, and the label definition determines which content the result
+measures; a domain-level label need not describe every page on a mixed site.
+
+Let $e=q-y$. The prediction-based estimate is $\widehat\theta=w^{\mathsf T}q$,
 so its error is exactly
 \begin{equation}\label{eq:contrast}
  \Delta=\widehat\theta-\theta=w^{\mathsf T}e.
 \end{equation}
-Thus the estimand determines which classification mistakes matter. In the
-browsing example, a popular domain can dominate an individual's total but
-cancel from a group comparison if the groups use it equally. A less popular
-domain visited disproportionately by one group can be influential for that
-comparison. An error rate that weights all items equally need not describe
-either target.
+Thus the estimand determines which classification mistakes matter. A widely
+used item can dominate a unit's total but cancel from a group comparison if
+both groups use it equally. A less common item used disproportionately by
+one group can be influential for that comparison. An error rate that weights
+all items equally need not describe either target.
 
 The same prediction vector can enter several estimates at once. Let
 $W=[w^{(1)},\ldots,w^{(R)}]$ collect the item weights for $R$ declared
 linear estimates. Their joint error is $W^{\mathsf T}e$, and under a
 repeated-prediction model its covariance is $W^{\mathsf T}\Sigma W$.
 The errors in two estimates share the same $e_j$ wherever both weights are
-nonzero. A common
-domain error may move two group means together and largely disappear from
+nonzero. A common item error may move two group means together and largely disappear from
 their difference. Appendix~\ref{app:prediction} gives their joint covariance
 under a repeated-prediction model. Retrospective correction from verified
 items is given in Section~\ref{sec:audit}.
@@ -166,7 +171,7 @@ If the question instead concerns repeated training and prediction, let
 $b=\E[q-y]$ and $\Sigma=\Cov(q-y)$ under that process while holding $y,w$
 fixed. Then $\E[\Delta]=w^{\mathsf T}b$ and
 $\Var(\Delta)=w^{\mathsf T}\Sigma w$. Reusing one uncertain item can make
-errors in different users' aggregates covary even if errors across distinct
+errors in different units' aggregates covary even if errors across distinct
 items are independent. Distinct item errors may also covary, but reuse alone
 does not imply that they do. These moments require a model of repeated
 prediction; the count bounds and probability audit below condition on the
@@ -352,8 +357,8 @@ $b=\E[e]$ and $\Sigma=\Cov(e)$. Then
 \end{equation}
 The trace term equals $\operatorname{tr}(M_VC\Sigma C^{\mathsf T})$.
 With independent item errors it is
-$\sum_jv_j\|M_VC_{\cdot j}\|^2$: each domain's contribution depends on
-variation in its user incidence after removing the controls. It is
+$\sum_jv_j\|M_VC_{\cdot j}\|^2$: each item's contribution depends on
+variation in its unit-level loading after removing the controls. It is
 nonnegative, but the other terms in equation~\eqref{eq:expectedscore} can
 have either sign, and an expected score is not the expectation of the OLS
 coefficient. In particular, ordinary attenuation does not follow. For
@@ -374,7 +379,7 @@ expectation
 Even if distinct item errors are independent, the trace term contains
 $\sum_jv_j(M_VC^{(r)}_{\cdot j})^{\mathsf T}
                   (M_VC^{(s)}_{\cdot j})$.
-One domain prediction can therefore distort the cross-product between two
+One item prediction can therefore distort the cross-product between two
 constructed regressors. If the outcome also uses these predictions, its
 measurement error contributes the analogous term
 $\E[d_r^{\mathsf T}M_Vd_0]$ to the regression numerator, with $C^{(0)}$
@@ -405,7 +410,7 @@ $r=y-q$. Then
  D&=y^{\mathsf T}Gy=q^{\mathsf T}Gq+2r^{\mathsf T}Gq+r^{\mathsf T}Gr.
  \label{eq:covariatemoments}
 \end{align}
-Let $R_j$ indicate a domain's inclusion in a probability audit, with
+Let $R_j$ indicate an item's inclusion in a probability audit, with
 $\pi_j=\Pr_R(R_j=1)>0$ and
 $\pi_{j\ell}=\Pr_R(R_j=R_\ell=1)>0$ for every relevant pair. Set
 $\pi_{jj}=\pi_j$. The following estimates are design unbiased for the two
@@ -425,7 +430,7 @@ design unbiased and can be unstable or undefined when the estimated
 denominator is near zero or nonpositive. Valid inference for the ratio
 requires additional design analysis; its variance involves inclusion
 probabilities for sets of up to four items. The formulas identify the
-information a domain audit would have to preserve. The linear-label
+information an item audit would have to preserve. The linear-label
 difference estimator in equation~\eqref{eq:difference} does not by itself
 correct a regression that uses $Cy$ as a covariate.
 

@@ -19,7 +19,7 @@ item errors enters the estimate's variance. Dependence alone does not determine
 bias; systematic errors on items with nonzero weights can make
 $w^{\mathsf T}b$ nonzero.
 
-Browsing totals and regression vectors are corresponding joint quantities.
+Unit aggregates and regression vectors are corresponding joint quantities.
 Writing $\widehat T=Cq$, $d=\widehat T-T$, and $\widehat\beta=ACq$ gives
 \begin{align}
  d&=Ce,\label{eq:identity}\\
@@ -28,22 +28,23 @@ Writing $\widehat T=Cq$, $d=\widehat T-T$, and $\widehat\beta=ACq$ gives
  &\Cov(\widehat\beta-\beta^*)&=AC\Sigma C^{\mathsf T}A^{\mathsf T}.
  \label{eq:regression}
 \end{align}
-The same item error is reused across all visits and users. These formulas
-quantify the specified prediction-error process; they do not include browsing-log
-error, user sampling, or uncertainty about the construct. They concern predicted
-exposure as an outcome. Noisy exposure as a regressor is a different
+The same item error is reused across every unit linked to that item. These
+formulas quantify the specified prediction-error process; they do not include
+errors in the item-to-unit map, unit sampling, or uncertainty about the
+construct. They concern a label-derived aggregate as an outcome. Using that
+aggregate as a regressor is a different
 errors-in-variables problem treated in Section~\ref{sec:covariates}.
 
 \subsection{Shared labels and correlated item errors}
 These are separate mechanisms under a repeated-prediction model. First, a
-single item error can appear in several users' aggregates. Even if the item
-errors $e_j$ are independent across $j$, users who share an uncertain item
+single item error can appear in several units' aggregates. Even if the item
+errors $e_j$ are independent across $j$, units that share an uncertain item
 can have correlated aggregate errors. This is a standard common-shock
 structure, analogous to shift-share inference \citep{adao2019}; it does not
 assert correlation between distinct item errors. Second, distinct item errors
 may themselves covary under repeated fitting. Shared training data or model
 parameters can produce such covariance, but using one fitted classifier does
-not by itself establish it. Users who visit disjoint domains can have
+not by itself establish it. Units linked to disjoint items can have
 correlated aggregate errors only under this second mechanism or another
 shared source of uncertainty. In equation~\eqref{eq:targetmoments}, positively
 correlated item errors increase variance when their weights have the same
@@ -65,7 +66,8 @@ special covariance structure, not an assertion that the right families are
 known or that all within-family mistakes are perfectly correlated.
 
 Independent item errors are another special case: $\Sigma$ is diagonal,
-with entries $v_j$. For browsing totals, equation~\eqref{eq:moments} reduces to
+with entries $v_j$. For any unit aggregate $T=Cy$,
+equation~\eqref{eq:moments} reduces to
 \begin{equation}\label{eq:covariance}
  \Var(d_i)=\sum_jc_{ij}^2v_j,\qquad
  \Cov(d_i,d_\ell)=\sum_jc_{ij}c_{\ell j}v_j.
@@ -75,8 +77,8 @@ and $\beta_j$ the false-negative probability on a truly positive item.
 For binary predictions, $v_j=\alpha_j(1-\alpha_j)$ on negative items and
 $v_j=\beta_j(1-\beta_j)$ on positive items. In browsing, repeated visits multiply one
 classification error; treating visits as independent would incorrectly replace
-squared visit weights by visit counts. Even this special case induces dependence
-across users who share uncertain domains.
+squared visit weights by visit counts. More generally, any reuse of an
+uncertain item can induce dependence across units.
 
 The same predictions can build several different aggregates. If the $r$th
 aggregate uses a fixed matrix $C^{(r)}$, then
@@ -88,16 +90,16 @@ For scalar estimates with item-weight vectors $w^{(r)}$, independent item
 errors yield
 $\Cov(\Delta_r,\Delta_s)=\sum_jv_jw_j^{(r)}w_j^{(s)}$.
 Thus each item contributes a rank-one term to the joint covariance of all
-estimates. A heavily weighted domain can move several reported quantities
+estimates. A heavily weighted item can move several reported quantities
 together; subtracting two of them can cancel its error. For a sequence of
-larger user panels, independent item errors with
+larger unit samples, independent item errors with
 $v_j\{w_j^{(r)}\}^2$ bounded away from zero for even one item prevent the
-prediction-error variance of that estimate from vanishing. More users alone
-do not supply more independent predictions for that domain. The covariance
+prediction-error variance of that estimate from vanishing. More units alone
+do not supply more independent predictions for that item. The covariance
 statements require a repeated-prediction model; $d^{(r)}=C^{(r)}e$ remains an
 exact identity for fixed realized predictions.
 
-For a fixed linear user contrast $a^{\mathsf T}d$, equal item-error variances
+For a fixed linear unit contrast $a^{\mathsf T}d$, equal item-error variances
 give a simple overlap diagnostic:
 \begin{equation}\label{eq:overlapratio}
  R(a,C)=
@@ -105,12 +107,12 @@ give a simple overlap diagnostic:
       {\sum_i a_i^2\sum_jc_{ij}^2}.
 \end{equation}
 The numerator is its variance, apart from the common variance factor. The
-denominator is what that variance would be if each user's aggregate error
+denominator is what that variance would be if each unit's aggregate error
 were independent while retaining its marginal variance. Thus $R$ measures
-the effect of discarding covariance across users for this one prediction-error
+the effect of discarding covariance across units for this one prediction-error
 component. It is at least one for nonnegative weights and counts, but may be
 above or below one for a signed contrast. It is not a general standard-error
-correction: unequal item variances, correlated item errors, user sampling,
+correction: unequal item variances, correlated item errors, unit sampling,
 and other errors require their own treatment.
 
 An uncertainty procedure must follow the same structure as the estimand.

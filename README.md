@@ -6,7 +6,10 @@ linear in binary item labels `y`, its target is `θ = w'y`, where `w` records ea
 item's influence. The items can be documents, places, websites, or other objects
 whose predicted labels are reused. The analysis conditions on fixed weights and
 gives exact error formulas, bounds, and audit results for linear targets. It
-also maps sums and proportions of predicted labels into downstream regressions
+starts with a known item-to-unit matrix `C`: the complete-label aggregate is
+`Cy`, while `Cq` uses predicted labels `q`. Different aggregations can use
+different matrices with the same `q`. The paper maps sums and proportions
+into downstream regressions
 and explains what changes for nonlinear statistics. Its decision point is after
 the data and predictions have been collected: what adjustments and uncertainty
 can the available validation evidence support?
@@ -28,7 +31,8 @@ When a sum or fixed-denominator proportion of predicted labels is used as a
 regression covariate, its error is the corresponding sum of item errors. The
 regression coefficient itself is nonlinear in those labels: the true covariate
 appears in both its numerator and denominator. The paper derives that
-coefficient error and the plug-in OLS score, distinguishes item-level from complete unit-level
+coefficient error and the plug-in OLS score, distinguishes item-level from
+complete unit-level
 validation, and gives probability-audit corrections for the numerator and
 denominator separately. A general transformation can be evaluated over the
 labels compatible with an audit, but the linear-target bounds do not
@@ -43,7 +47,7 @@ item-level validation. The reuse mechanism is also familiar from
 [shift-share inference](https://www.princeton.edu/~mkolesar/papers/shift_share.pdf),
 so the covariance algebra is not claimed as a new regression method.
 The companion [fewlab](https://github.com/finite-sample/fewlab) framework
-already maps each reusable item label into all user outcomes and regression
+already maps each reusable item label into unit outcomes and regression
 coefficients, and uses that map to choose labels to verify. This paper starts
 with the collected labels and predictions, and examines the corrections and
 standard errors that their validation design supports.
