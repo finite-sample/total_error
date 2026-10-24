@@ -1,24 +1,25 @@
-\section{A browsing-data stress test}\label{sec:benchmark}
-The empirical question is how much information confusion counts retain for
-comparisons supported by an actual browsing matrix. The fixed benchmark contains
+\section{Reuse and error locations in browsing data}\label{sec:benchmark}
+Domain labels are reused across people, and visits are concentrated on a few
+domains. The June 2022 YouGov Pulse/RealityMine data contain
 \BenchmarkUsers{} pseudonymized users, \BenchmarkDomains{} domains,
 \BenchmarkRecords{} user--domain records, and \BenchmarkVisits{} visits.
-It is the bundled \texttt{fewlab} extract of the June 2022 YouGov Pulse/RealityMine
-panel with Blacklight scanner outcomes. The replication package pins the source
-commit and file hashes. Its analytic universe contains domains with recorded
-scanner labels; exposure shares use visits within that universe as their
-denominator. These recorded outcomes are reference labels for the experiment,
+The most widely used domain appears in \LargestDomainUsers{} users' records.
+One domain accounts for \LargestDomainVisitShare{}\% of visits; the most visited
+1\% of domains account for \TopOnePercentDomainVisitShare{}\%.
+We use Blacklight scanner outcomes and include domains with recorded
+scanner labels. Each user's visit shares use visits to those domains as the
+denominator.
+The scanner outcomes serve as reference labels for this exercise,
 not error-free measures of all tracking activity. The exercise makes no causal
 or population-representative claim about demographic differences.
 
-We retain the extract's demographic design matrix: an intercept and indicators
-for gender, race, education, and source-coded age groups. Omitted categories are Male, White,
+We use an intercept and indicators for gender, race, education, and age groups.
+Omitted categories are Male, White,
 HS or Below, and under 25. For each of seven scanner outcomes, we
 calculate all twelve non-intercept least-squares coefficients for both visit
 totals and visit shares. Each coefficient is a fixed weighted label sum.
 Two scanner columns are counts and are dichotomized at a positive value; the
-other five are binary. Complete labels, valid joins, positive visits, and full
-column rank are checked before estimation.
+other five are binary.
 
 Predictions are imposed, rather than produced by a fitted classifier. Within
 each true class, we randomly flip the integer part of 1\%, 5\%, or 10\% of the
@@ -32,6 +33,9 @@ worst-case sensitivity analysis, not an estimate of likely classifier bias.
 Extrema are computed separately for each coefficient; a single error arrangement
 need not reverse all comparisons at once.
 
+At the 1\% setting, exact confusion counts do not identify the sign of any
+of the \BenchmarkContrasts{} visit-share coefficients (Table~\ref{tab:browsing}).
+
 \begin{table}[htbp]
 \centering\small
 \caption{What exact confusion counts establish at 1\% imposed error in each true class}
@@ -39,20 +43,18 @@ need not reverse all comparisons at once.
 \input{../tabs/browsing_table}
 \par\smallskip
 \begin{minipage}{\linewidth}\footnotesize
-Each row covers twelve demographic coefficients of visit shares in the fixed
-browsing frame. ``Sign identified'' counts bounding intervals excluding zero for fixed random
+Each row covers twelve demographic coefficients of visit shares in the
+browsing data. ``Sign identified'' counts bounding intervals excluding zero for imposed random
 predictions. Realized error is the median absolute difference between the
 prediction-based and reference coefficients. Bound width is the median
 identification-interval width; both are in percentage points (pp). Error
 counts are rounded down within each true class. These are not sampling
-intervals. All outcomes, coefficients, scales, and error fractions are in
-the machine-readable results.
+intervals.
 \end{minipage}
 \end{table}
+\FloatBarrier
 
-At the smallest imposed error fraction, none of the \BenchmarkContrasts{}
-share-coefficient signs is identified by the full confusion matrix
-(Table~\ref{tab:browsing}). The realized errors from random placement are
+The realized errors from random placement are
 usually much smaller than the count-compatible ranges. For example, the
 reference female coefficient for Facebook-pixel visit share is
 \FocalTruth{} percentage points. The fixed random predictions differ by
@@ -62,8 +64,34 @@ $[\FocalLower{},\FocalUpper{}]$ percentage points. Moving the same numbers
 of errors can reverse all \BenchmarkContrasts{} share-coefficient signs,
 but those placements are adversarial. These results show what the confusion
 counts fail to rule out for this frame, not what a fitted classifier is likely
-to do. Total coefficients and larger imposed error fractions are in the
-replication results.
+to do.
+
+The same browsing matrix gives a regression-covariate illustration. For each
+other scanner outcome, we regress its user-level visit share on the
+advertising-tracker visit share and the demographic indicators above. We hold
+the outcome labels fixed and replace only the advertising-tracker labels with
+the 1\% random-error draw. The third-party-cookie slope changes from
+\CompleteCovariateCoefficient{} to \ImposedCovariateCoefficient{}; across the
+six outcomes, slopes can rise or fall (Table~\ref{tab:covariate}). These are
+descriptive coefficients under one imposed draw, not estimated effects of an
+observed classifier.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Imposed domain-label errors in an aggregate regression covariate}
+\label{tab:covariate}
+\input{../tabs/covariate_table}
+\par\smallskip
+\begin{minipage}{\linewidth}\footnotesize
+Each row regresses the listed scanner outcome's user-level visit share on
+advertising-tracker visit share and demographic indicators. ``Recorded labels''
+uses the scanner's advertising-tracker labels; ``Imposed errors'' flips the
+integer part of 1\% of those domain labels within each true class in one random
+draw. Outcome labels and controls are held fixed. Coefficients are descriptive;
+the imposed errors are not an evaluation of a fitted classifier.
+\end{minipage}
+\end{table}
+\FloatBarrier
 
 \paragraph{How much does domain reuse matter for uncertainty?}
 The incidence matrix permits a separate diagnostic without fitting a

@@ -1,6 +1,6 @@
 # Bundled research data
 
-## Fixed browsing benchmark
+## Browsing extract
 
 The three bundled files reproduce the fewlab extract at original local commit
 `e360f6542c0e97c6b8819da6c17d5e08c1543762`, byte-for-byte. That original snapshot
@@ -27,17 +27,20 @@ reproduce its construction or its scanner measurements.
   are inherited from the source coding, not recomputed at June 2022: birth-year
   intervals (1929,1958], (1958,1973], (1973,1988], (1988,1998], and
   (1998,2003] are labeled 65+, 50–64, 35–49, 25–34, and under 25.
-- `labels.csv.gz`: seven recorded scanner measures. The benchmark uses an indicator
+- `labels.csv.gz`: seven recorded scanner measures. The analysis uses an indicator
   of a positive value for each measure. This dichotomizes `ddg_join_ads` and
   `third_party_cookies`; the other five columns are already binary.
 
 Missing labels are not zero. Only domains with recorded labels belong to this
-benchmark, and shares are normalized over that frame. The checks require unique
+analysis, and shares are normalized over that frame. The checks require unique
 user-domain records, positive finite visits, full join coverage, unique identifier
 keys, finite complete features/labels, nonnegative labels, and a full-rank design.
-Recorded scanner outcomes serve as fixed benchmark labels, not error-free truth
+Recorded scanner outcomes serve as reference labels, not error-free truth
 about all forms of tracking. Predictions and their mistakes are deliberately
 imposed by the experiment; no result estimates a real classifier's performance.
+`data/results/browsing_covariate.csv` reports descriptive regressions of six
+scanner visit shares on advertising-tracker visit share, comparing recorded
+advertising-tracker labels with one imposed 1% error draw.
 
 ## Observed adult-domain classifications
 

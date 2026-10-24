@@ -1,14 +1,19 @@
-\section{When an aggregate becomes a regression covariate}
+\section{Aggregates in regression}
 \label{sec:covariates}
-Counts and fixed-denominator proportions assembled from predicted labels are
-also common regression covariates. With fixed aggregation matrix $C$, their
-complete-label values are $T=Cy$ and their predicted values are $S=Cq$.
-Each component of $T$ is linear in item labels. A downstream statistic
-$F(T,Z)$ need not be: its exact plug-in error is
-$F(Cq,Z)-F(Cy,Z)$, where $Z$ denotes other fixed inputs. A denominator that
-depends on predicted labels makes even the underlying proportion nonlinear.
-The sharp count bounds in Section~\ref{sec:identification} therefore apply
-directly only when the declared target is linear in $y$.
+An aggregate built from predicted labels can be either a regression outcome
+or a covariate. If it is the outcome and $X$ is a fully observed, full-rank
+design, the complete-label least-squares coefficients are
+$\beta^*=ACy$, where $A=(X^{\mathsf T}X)^{-1}X^{\mathsf T}$. The
+prediction-based coefficients are $ACq$. A contrast $r^{\mathsf T}\beta^*$
+has item weights $w=C^{\mathsf T}A^{\mathsf T}r$, so its error is $w^{\mathsf T}e$.
+The count bounds and item-audit correction below apply to this contrast.
+The coefficients are descriptive for the observed frame; causal or population
+interpretations require additional assumptions.
+
+If the aggregate is a covariate, the coefficient is nonlinear in the labels.
+The same is true of a proportion whose denominator depends on predicted
+labels. The linear bounds below do not apply to these quantities without
+evaluating their full downstream map.
 
 For example, let $Y$ be an observed outcome and $V$ a full-rank matrix of
 fully observed controls, including an intercept. The coefficient that
@@ -26,18 +31,15 @@ Appendix~\ref{app:covariates}. Those formulas do not provide an interval for
 $\beta(y)$: a ratio of estimated moments can be biased, unstable, or
 undefined.
 
-This setting intersects work on machine-generated regressors
-\citep{fong2021predictions,battaglia2025generated,kluger2025imputed}.
-\citet{battaglia2025generated} already study classification and aggregation
-into regression indices. \citet{kluger2025imputed} allow nonuniform sampling
-of complete regression observations; verifying a reusable item here
-usually supplies only a piece of many observations. A single predicted item
-label can enter several units' indices. This creates the same overlap structure as a
-shift-share regressor \citep{adao2019}: if item errors are random, independent
-across items, and have variances $v_j$, then the error in two units'
-covariates has covariance $\sum_j c_{ij}c_{\ell j}v_j$. Independence of the
-item errors therefore does not give independence of the regression rows.
-The overlap can matter in either direction for a coefficient. An item
+\citet{fong2021predictions} study regression with predicted covariates, and
+\citet{battaglia2025generated} include indices built by classification and
+aggregation. This paper's item-to-record map makes the unit of validation
+explicit: verifying item $j$ may correct pieces of many regression rows,
+without revealing any row's complete covariate. Work using validated complete
+regression rows, including \citet{kluger2025imputed}, requires a different
+sampling unit or an adaptation here. Overlap in $C$ has the common-shock
+structure of shift-share designs \citep{adao2019}. It can matter in either
+direction for a coefficient. An item
 with the same weight in every unit affects their totals, but its error disappears
 from a regression with an intercept because $M_VC_{\cdot j}=0$.
 
@@ -51,12 +53,7 @@ also enter the off-diagonal cross-products of the regression's normal
 equations. In that case there need not be a single attenuation factor: an
 error shared by two covariates can move both coefficients. The relevant
 cross-products are given in Appendix~\ref{app:covariates}.
-A verified item can inform many units' aggregates, but usually does not
-reveal any one unit's entire covariate. Methods requiring complete covariates
-for sampled regression rows therefore need a different validation design or
-an adaptation to item-level labels. The companion \texttt{fewlab} project
-develops such an item design and analyzes a constructed covariate under its
-randomized label-acquisition process \citep{sood2026fewlab}. For
+A verified item can inform many units' aggregates. For
 equation~\eqref{eq:truecovariate}, an item audit must account for item pairs
 in the quadratic denominator; correcting each aggregate separately is not
 enough.

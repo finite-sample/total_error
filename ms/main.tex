@@ -3,10 +3,12 @@
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage{amsmath,amssymb,amsthm,booktabs,graphicx}
+\usepackage{placeins}
+\usepackage{needspace}
 \usepackage[round,authoryear]{natbib}
 \usepackage[colorlinks=true,allcolors=blue]{hyperref}
 \usepackage{microtype}
-\hypersetup{pdftitle={Total Error: What Classifier Validation Establishes About Downstream Estimates},
+\hypersetup{pdftitle={Reused Predicted Labels in Aggregates and Regression},
   pdfauthor={Gaurav Sood}}
 \input{../tabs/results}
 \input{../tabs/research_results}
@@ -15,10 +17,12 @@
 \newcommand{\Var}{\operatorname{Var}}
 \newcommand{\Cov}{\operatorname{Cov}}
 \newcommand{\Corr}{\operatorname{Corr}}
-\title{Total Error: What Classifier Validation Establishes About Downstream Estimates}
+\title{Reused Predicted Labels in Aggregates and Regression}
 \author{Gaurav Sood\thanks{\href{mailto:gsood07@gmail.com}{gsood07@gmail.com}.
-Earlier browsing analysis: \href{https://github.com/soodoku/gsood_com/blob/8f8269994a9c848ee182dd5dca9312b56dd4fb5d/wp_images/2018/09/ml_errors.pdf}{Sood (2018)};
-\citet{laohaprapanon2020domain}. Code:
+The observation that errors on popular domains can distort browsing totals
+appears in \href{https://github.com/soodoku/gsood_com/blob/8f8269994a9c848ee182dd5dca9312b56dd4fb5d/wp_images/2018/09/ml_errors.pdf}{Sood (2018)} and
+\citet{laohaprapanon2020domain}. This paper develops its implications for
+aggregates and validation. Code:
 \url{https://github.com/finite-sample/total_error}.}}
 \date{}
 \begin{document}
@@ -26,152 +30,132 @@ Earlier browsing analysis: \href{https://github.com/soodoku/gsood_com/blob/8f826
 
 \begin{abstract}
 Researchers often reuse one predicted item label across many records and
-construct several aggregates from those records. With skewed item use, one mistake can
-move several reported estimates together. A confusion matrix records how many
-mistakes occurred but loses their locations.
-This note asks what existing validation evidence can establish about estimates
-built from such labels. For estimates linear in the labels, I give sharp bounds using
-exact confusion counts and show when those counts identify the estimate.
-A probability sample of already-verified target items can provide a simultaneous
-count-based confidence certificate or a direct correction with a joint
-design covariance for several estimates. In a browsing-data stress test, exact error
-counts leave the signs of 84 group comparisons unresolved. Its user--domain
-matrix also shows how record-level independence can misstate prediction-error
-uncertainty even with independent domain errors. A separate
-comparison of adult-domain classifiers shows similar information loss with
-observed disagreements, without treating either classifier as truth. I also
-distinguish these fixed-label results from score plug-ins, which need relevant
-conditional mean assumptions, and from regression with aggregated predicted
-covariates, whose coefficient is nonlinear in the labels. The practical task
-is to match available validation evidence to the estimates and uncertainty
-claims the researcher intends to report.
+construct several aggregates from those records. One mistake can then change
+several unit measures and estimates together. I trace these errors through
+totals, comparisons, and regressions using a matrix linking items to records.
+When an aggregate is a regression outcome with fixed observed regressors, its
+coefficient is a weighted sum of item labels: exact target-item confusion
+counts give sharp bounds, but may
+leave even its sign unresolved. When the aggregate is a covariate, its
+coefficient also depends on cross-products of labels, so linear corrections
+do not carry over automatically. Reuse can correlate aggregate errors across
+records even when errors on distinct items are independent. An existing
+probability audit of items with known inclusion probabilities can correct
+several linear estimates jointly and
+quantify their design uncertainty without calibrated scores. In browsing
+data, exact counts of 1\% imposed errors leave all 84 group-comparison signs
+unresolved, and a 1\% perturbation changes slopes when an aggregate is a
+covariate. Observed adult-domain classifiers agree on 97.7\% of domains yet
+imply different visit shares. The needed validation evidence depends on where
+item errors enter the reported estimate.
 \end{abstract}
 
-Suppose a researcher classifies reusable items, such as websites, merchants,
-products, or documents, and links their labels to observational units. The
-reported quantity might be a total, a difference in means, or a coefficient
-from regressing an aggregate outcome on observed covariates. The same label
-may enter many units and several reported statistics, and its
-influence depends on the particular quantity being estimated. Accuracy and
-the usual false-positive and false-negative rates count items; they do not
-record which influential items were misclassified. Knowing the exact
-confusion matrix for the target collection therefore need not determine even
-the sign of a group comparison.
+Researchers classify websites, merchants, documents, and other items, then
+join their predicted labels to records of people, places, or periods. A domain
+label, for example, may enter the browsing histories of many people and the
+visit shares reported for several groups. Classification accuracy counts the
+domain once. Its effect on a group difference depends on how often each group
+visits it. An error on a widely visited domain can move several group means
+together, while an error on a less visited but unevenly used domain can change
+their difference. Error counts alone omit those locations.
 
-The distinction between classifying items well and estimating an aggregate
-well is established. Work on quantification addresses class prevalence
-\citep{hopkins2010,forman2008,vaz2019quantification}; cost quantification
-already allows nonnegative item-specific weights \citep{forman2008}.
-Design-based supervised learning corrects aggregates using probability samples
-of verified labels \citep{egami2023}. Election and financial auditing use
-random checks to control weighted error
-\citep{stark2008audits,shekhar2023audits}. Machine-generated covariates,
-including indices assembled from classifications, are studied in regression
-\citep{fong2021predictions,battaglia2025generated,kluger2025imputed}.
-Reuse of an uncertain item across records has the same common-shock covariance
-structure familiar from shift-share designs \citep{adao2019}.
-These results motivate a narrower question: for one declared estimate and a
-fixed set of target items, what does a particular validation summary actually
-establish? Reused labels and signed comparison weights make that question
-especially consequential.
+The same issue reaches regression in two ways. If a label-derived aggregate is
+the outcome, each fixed-design coefficient is a weighted sum of the item
+labels. If the aggregate is a covariate, the coefficient depends on both a
+linear numerator and a quadratic denominator in those labels. An item error
+can enter many regression rows, and its effect on a coefficient need not look
+like ordinary attenuation. When several estimates use the same predictions,
+their errors can move together or cancel in a contrast. These are consequences
+of the links between items and records, even when errors on distinct items
+are independent.
 
-I answer it for an already assembled dataset, taking its predictions and
-validation protocol as given. First, I map each linear estimate back to its
-item weights and derive the smallest interval compatible with exact
-target-item confusion counts. I characterize when those counts are sufficient.
-Second, I show how known probabilities for already-verified items give a
-simultaneous count certificate or a direct correction and joint covariance for
-declared estimates. Third, I apply the calculations to a browsing-data stress
-test and to observed disagreements among adult-domain classifiers. The latter
-is an information exercise because neither classification is adjudicated
-truth. Aggregated predicted covariates and calibrated scores are related uses
-of the same labels, but interpreting a regression slope or a score plug-in
-requires additional assumptions. The note offers a way to match validation
-evidence to the downstream estimand; it does not introduce a new classifier
-or a new regression estimator. Choosing which labels to acquire in the first
-place is the focus of the companion \texttt{fewlab} project
-\citep{sood2026fewlab}.
+Prior work treats important parts of this problem. Quantification estimates
+class prevalence, and cost quantification allows nonnegative item weights
+\citep{forman2008,hopkins2010,vaz2019quantification}. Predicted regression
+covariates and indices built by classification and aggregation are studied by
+\citet{fong2021predictions} and \citet{battaglia2025generated}; design-based
+supervised learning uses verified labels to correct downstream analyses
+\citep{egami2023}. Shared item errors have a covariance structure familiar
+from shift-share designs \citep{adao2019}. The question here is what a
+particular validation result establishes when one item prediction is reused
+across records and across reported estimates. Its answer depends on the
+downstream quantity and on which error locations validation preserves.
 
-\section{Reusable labels and downstream targets}\label{sec:estimand}
+I represent the links by a matrix mapping item labels into record-level
+aggregates. For linear estimates, this yields item weights that determine the
+effect of each mistake. I derive sharp bounds given exact false-positive and
+false-negative counts for the target items, then show when those counts
+suffice. A probability audit of items can instead correct several linear
+estimates jointly, with a design covariance that retains their shared error.
+The regression-covariate case exposes the limit of those linear results: its
+denominator contains item cross-products. None of the fixed-label bounds or
+probability-audit results requires calibrated scores.
+
+A small example shows how one item mistake changes several records and both
+roles of an aggregate in regression. The empirical analysis uses an observed
+person--domain matrix to show how reuse and skewed visits affect uncertainty
+and count-based bounds under imposed errors. A second analysis compares
+observed classifications of adult domains and their visit-weighted shares.
+The latter measures disagreement between classifiers, without treating either
+as verified truth.
+
+\section{From labels to estimates}\label{sec:estimand}
 Let $y_j\in\{0,1\}$ be the reference label of item $j$, for
-$j=1,\ldots,k$, and let $q_j\in\{0,1\}$ be its prediction. An item can enter
-many observational units, and a unit can contain many items. A known matrix
+$j=1,\ldots,k$, and let $q_j\in\{0,1\}$ be its prediction. A known matrix
 $C=(c_{ij})\in\mathbb R^{n\times k}$ records how item $j$ contributes to
-unit $i$'s construct. Its
-rows might represent people, households, places, or time periods; its columns
-might represent websites, merchants, products, employers, or documents.
-Entries can be counts, durations, expenditures, or fixed shares, according
-to the construct. The complete-label and prediction-based unit vectors are
-$T=Cy$ and $S=Cq$.
-
-For declared fixed unit weights $a$, a linear target and its item weights are
+unit $i$. An item can enter many units, and a unit can contain many items.
+The measures built from reference and predicted labels are $T=Cy$ and $S=Cq$.
+A reported statistic $F(T,Z)$, with other observed inputs $Z$, incurs error
+$F(Cq,Z)-F(Cy,Z)$. The rows of $C$ can also stack several aggregations made
+from the same predictions. For fixed unit weights $a$, a linear target has
+item weights
 \begin{equation}\label{eq:estimand}
  \theta=a^{\mathsf T}T=w^{\mathsf T}y
        =\sum_{j=1}^k w_jy_j,
  \qquad w=C^{\mathsf T}a.
 \end{equation}
-The weights can be nonnegative for a total or signed for a comparison.
-Different analyses may use different matrices $C^{(r)}$ and unit weights
-$a^{(r)}$, while reusing the same predictions $q$. Each then has item weights
-$w^{(r)}=C^{(r)\mathsf T}a^{(r)}$. Fixed-denominator proportions fit this
-setup by absorbing the known denominator into the rows of $C^{(r)}$.
-If a denominator depends on unknown labels, or if the downstream statistic
-is nonlinear, its target instead has the form $F(C^{(1)}y,\ldots,C^{(R)}y,Z)$
-for other observed inputs $Z$; Section~\ref{sec:covariates} treats a
-regression example.
+Totals have nonnegative weights; group comparisons have signed weights.
+Known-denominator proportions are also linear after the denominator is
+absorbed into $C$. Different targets may use different matrices and unit
+weights while reusing the same $q$. A label-dependent denominator or a
+regression that uses $Cq$ as a covariate is nonlinear in the labels
+(Section~\ref{sec:covariates}).
 
-A regression of a label-derived outcome on a full-rank, fully observed design
-$X$ is still linear in the item labels. With
-$A=(X^{\mathsf T}X)^{-1}X^{\mathsf T}$, its complete-label coefficient is
-$\beta^*=ACy$. A coefficient contrast $r^{\mathsf T}\beta^*$ has unit weights
-$a=A^{\mathsf T}r$ and item weights $w=C^{\mathsf T}A^{\mathsf T}r$.
-These are descriptive coefficients for the specified frame; causal or
-population interpretations require additional assumptions. Throughout, the
-link matrices, unit weights, and fully observed regressors used to construct
-them are fixed. Their uncertainty, if relevant, requires another sampling
-model.
-
-Browsing is one application. Here $c_{ij}$ can count visits by person $i$ to
-website $j$. A difference between group means gives each person in group
-$A$ weight $1/n_A$ and each in group $B$ weight $-1/n_B$. For browsing shares,
-divide each row of $C$ by its observed total visits before applying
-equation~\eqref{eq:estimand}. Replacing counts by duration changes the
-exposure unit, and the label definition determines which content the result
-measures; a domain-level label need not describe every page on a mixed site.
+In the browsing application, $c_{ij}$ counts person $i$'s visits to domain
+$j$. For visit shares, we divide each row of $C$ by that person's observed
+total visits. These denominators do not depend on the domain labels.
 
 Let $e=q-y$. The prediction-based estimate is $\widehat\theta=w^{\mathsf T}q$,
 so its error is exactly
 \begin{equation}\label{eq:contrast}
  \Delta=\widehat\theta-\theta=w^{\mathsf T}e.
 \end{equation}
-Thus the estimand determines which classification mistakes matter. A widely
-used item can dominate a unit's total but cancel from a group comparison if
-both groups use it equally. A less common item used disproportionately by
-one group can be influential for that comparison. An error rate that weights
-all items equally need not describe either target.
+The weights determine which mistakes matter. A popular item can dominate a
+total but cancel from a comparison if both groups use it equally.
+For several estimates, let $W=[w^{(1)},\ldots,w^{(R)}]$. Their joint error is
+$W^{\mathsf T}e$: the same item mistake can move several estimates together.
+For realized labels and predictions these errors are fixed. Under a specified
+repeated-prediction process, with $\Sigma=\Cov(e)$, the record-level errors
+$d=Ce$ have covariance $C\Sigma C^{\mathsf T}$ and the estimate errors have
+covariance $W^{\mathsf T}\Sigma W$. If distinct item errors are independent,
+$\Cov(d_i,d_\ell)=\sum_j c_{ij}c_{\ell j}\Var(e_j)$: reuse alone can link
+errors across records.
+The bounds and audit below instead condition on realized predictions.
+Appendix~\ref{app:prediction} develops the covariance result.
 
-The same prediction vector can enter several estimates at once. Let
-$W=[w^{(1)},\ldots,w^{(R)}]$ collect the item weights for $R$ declared
-linear estimates. Their joint error is $W^{\mathsf T}e$, and under a
-repeated-prediction model its covariance is $W^{\mathsf T}\Sigma W$.
-The errors in two estimates share the same $e_j$ wherever both weights are
-nonzero. A common item error may move two group means together and largely disappear from
-their difference. Appendix~\ref{app:prediction} gives their joint covariance
-under a repeated-prediction model. Retrospective correction from verified
-items is given in Section~\ref{sec:audit}.
-
-For fixed labels and a fixed fitted classifier, $\Delta$ is fixed.
-If the question instead concerns repeated training and prediction, let
-$b=\E[q-y]$ and $\Sigma=\Cov(q-y)$ under that process while holding $y,w$
-fixed. Then $\E[\Delta]=w^{\mathsf T}b$ and
-$\Var(\Delta)=w^{\mathsf T}\Sigma w$. Reusing one uncertain item can make
-errors in different units' aggregates covary even if errors across distinct
-items are independent. Distinct item errors may also covary, but reuse alone
-does not imply that they do. These moments require a model of repeated
-prediction; the count bounds and probability audit below condition on the
-realized predictions instead. Appendix~\ref{app:prediction}
-gives the covariance details and a rare-error example showing why many items
-alone do not justify a normal approximation.
+\Needspace{6\baselineskip}
+For illustration, consider three records and two items:
+\[
+C=\begin{pmatrix}4&0\\1&2\\0&1\end{pmatrix},\qquad
+y=(0,1)^{\mathsf T},\qquad q=(1,1)^{\mathsf T}.
+\]
+One false positive changes
+the record measures from $T=(0,2,1)^{\mathsf T}$ to
+$S=(4,3,1)^{\mathsf T}$: it affects two records unequally. With an
+observed variable $Z=(0,1,2)^{\mathsf T}$ and an intercept, the slope from
+regressing $T$ on $Z$ is $1/2$; using $S$ as the outcome gives $-3/2$.
+Regressing $Z$ on $T$ also gives $1/2$, while using $S$ as the covariate
+gives $-9/14$. The two regression roles have different error formulas.
 
 \input{sections/covariates}
 
@@ -179,7 +163,6 @@ alone do not justify a normal approximation.
 
 \input{sections/benchmark}
 
-\clearpage
 \input{sections/adult}
 
 \section{Implications for validation}
@@ -208,7 +191,7 @@ appear in Appendix~\ref{app:rates}.
 \setlength{\bibsep}{1pt}
 \urlstyle{same}
 \raggedright
-\bibliographystyle{plainnat}
+\bibliographystyle{chicago}
 \bibliography{references}
 \endgroup
 

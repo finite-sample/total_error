@@ -1,2 +1,2 @@
-"users","domains","records","visits","coefficients","outcomes","seed"
-1132,34078,103853,4767099,12,7,20261004
+"users","domains","records","visits","coefficients","outcomes","largest_domain_users","largest_domain_visit_share","top_one_percent_domain_visit_share","seed"
+1132,34078,103853,4767099,12,7,1080,0.206985841913499,0.834278037859084,20261004

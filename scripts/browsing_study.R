@@ -9,6 +9,9 @@ for (outcome in colnames(panel$labels)) {
   truth <- panel$labels[, outcome]
   for (rate in c(0.01, 0.05, 0.10)) {
     predictions <- place_errors(truth, rate)
+    if (outcome == "ddg_join_ads" && rate == 0.01) {
+      ad_predictions <- predictions
+    }
     fp <- sum(predictions == 1 & truth == 0)
     fn <- sum(predictions == 0 & truth == 1)
     for (scale in names(panel$influences)) {
@@ -47,13 +50,38 @@ results <- do.call(rbind, results)
 rownames(results) <- NULL
 dir.create("data/results", showWarnings = FALSE)
 write.csv(results, "data/results/browsing_bounds.csv", row.names = FALSE)
+domain_visits <- Matrix::colSums(panel$counts)
+domain_users <- Matrix::colSums(panel$counts > 0)
 metadata <- data.frame(
   users = nrow(panel$design), domains = nrow(panel$labels),
   records = length(panel$counts@x), visits = sum(panel$counts),
   coefficients = ncol(panel$design) - 1, outcomes = ncol(panel$labels),
+  largest_domain_users = max(domain_users),
+  largest_domain_visit_share = max(domain_visits) / sum(domain_visits),
+  top_one_percent_domain_visit_share = sum(
+    sort(domain_visits, decreasing = TRUE)[seq_len(ceiling(length(domain_visits) / 100))]
+  ) / sum(domain_visits),
   seed = 20261004
 )
 write.csv(metadata, "data/results/browsing_metadata.csv", row.names = FALSE)
+ad_share <- as.numeric(panel$shares %*% panel$labels[, "ddg_join_ads"])
+predicted_ad_share <- as.numeric(panel$shares %*% ad_predictions)
+ad_residual <- stats::lm.fit(panel$design, ad_share)$residuals
+predicted_ad_residual <- stats::lm.fit(panel$design, predicted_ad_share)$residuals
+covariate_example <- do.call(rbind, lapply(
+  setdiff(colnames(panel$labels), "ddg_join_ads"), function(outcome) {
+    outcome_share <- as.numeric(panel$shares %*% panel$labels[, outcome])
+    outcome_residual <- stats::lm.fit(panel$design, outcome_share)$residuals
+    data.frame(
+      outcome = outcome,
+      complete_label_coefficient = sum(ad_residual * outcome_residual) /
+        sum(ad_residual^2),
+      imposed_prediction_coefficient = sum(predicted_ad_residual * outcome_residual) /
+        sum(predicted_ad_residual^2)
+    )
+  }
+))
+write.csv(covariate_example, "data/results/browsing_covariate.csv", row.names = FALSE)
 
 # Compare item-level variance with a calculation that discards shared domains.
 projection <- solve(crossprod(panel$design), t(panel$design))

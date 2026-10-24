@@ -1,4 +1,4 @@
-# Total Error: What Classifier Validation Establishes About Downstream Estimates
+# Reused Predicted Labels in Aggregates and Regression
 
 Start with the research quantity: a total, a difference between groups, or a
 regression coefficient constructed from classified items. When the quantity is
@@ -64,10 +64,10 @@ regression estimator. Earlier work already treats [aggregate
 prevalence](https://doi.org/10.1111/j.1540-5907.2009.00428.x) and
 [weighted cost quantification](https://doi.org/10.1007/s10618-008-0097-y).
 
-The bundled YouGov browsing benchmark is one application. A user comparison
+The YouGov browsing analysis is one application. A user comparison
 with weights `a` and a browsing matrix `C` has `θ = a'Cy = w'y`, where `w = C'a`.
 Exposure shares first normalize the rows of `C`; regression coefficients supply
-`a` from the fixed design matrix. This benchmark includes seven scanner outcomes,
+`a` from the fixed design matrix. This analysis includes seven scanner outcomes,
 twelve demographic coefficients, visit totals and shares, and three imposed error
 fractions. It is a stress test with deliberately generated mistakes, not an
 evaluation of a trained classifier. One contrast compares three audit intervals

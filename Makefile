@@ -24,7 +24,7 @@ paper: exhibits report
 
 bibliography:
 	mkdir -p ms/build
-	printf '%s\n' '\relax' '\citation{*}' '\bibstyle{plainnat}' '\bibdata{references}' > ms/build/bibliography.aux
+	printf '%s\n' '\relax' '\citation{*}' '\bibstyle{chicago}' '\bibdata{references}' > ms/build/bibliography.aux
 	cd ms && bibtex build/bibliography
 	! grep -E 'Warning--|error message' ms/build/bibliography.blg
 

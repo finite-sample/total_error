@@ -1,5 +1,8 @@
 bounds <- read.csv("data/results/browsing_bounds.csv")
 metadata <- read.csv("data/results/browsing_metadata.csv")
+covariate_example <- read.csv("data/results/browsing_covariate.csv")
+cookie_example <- subset(covariate_example, outcome == "third_party_cookies")
+stopifnot(nrow(cookie_example) == 1)
 overlap <- read.csv("data/results/browsing_overlap.csv")
 joint <- read.csv("data/results/browsing_joint.csv")
 audit <- read.csv("data/results/audit_summary.csv")
@@ -25,6 +28,13 @@ macros <- c(
   BenchmarkUsers = number(metadata$users), BenchmarkDomains = number(metadata$domains),
   BenchmarkRecords = number(metadata$records), BenchmarkVisits = number(metadata$visits),
   BenchmarkContrasts = number(metadata$coefficients * metadata$outcomes),
+  LargestDomainUsers = number(metadata$largest_domain_users),
+  LargestDomainVisitShare = number(100 * metadata$largest_domain_visit_share, 1),
+  TopOnePercentDomainVisitShare = number(
+    100 * metadata$top_one_percent_domain_visit_share, 1
+  ),
+  CompleteCovariateCoefficient = number(cookie_example$complete_label_coefficient, 3),
+  ImposedCovariateCoefficient = number(cookie_example$imposed_prediction_coefficient, 3),
   MeanShareVarianceRatio = number(overlap_value("mean", "variance_ratio"), 1),
   FemaleShareVarianceRatio = number(overlap_value("gender_Female", "variance_ratio"), 2),
   BlackShareVarianceRatio = number(overlap_value("race_Black", "variance_ratio"), 2),
@@ -89,6 +99,21 @@ writeLines(
     "\\midrule", rows, "\\bottomrule", "\\end{tabular}"
   ),
   "tabs/browsing_table.tex"
+)
+covariate_rows <- vapply(seq_len(nrow(covariate_example)), function(i) {
+  x <- covariate_example[i, ]
+  sprintf(
+    "%s & %.3f & %.3f \\\\", labels[x$outcome],
+    x$complete_label_coefficient, x$imposed_prediction_coefficient
+  )
+}, character(1))
+writeLines(
+  c(
+    "\\begin{tabular}{lrr}", "\\toprule",
+    "Outcome & Recorded labels & Imposed errors \\\\",
+    "\\midrule", covariate_rows, "\\bottomrule", "\\end{tabular}"
+  ),
+  "tabs/covariate_table.tex"
 )
 adult_rows <- vapply(seq_len(nrow(adult)), function(i) {
   x <- adult[i, ]
