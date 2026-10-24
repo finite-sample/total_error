@@ -42,6 +42,25 @@ imposed by the experiment; no result estimates a real classifier's performance.
 scanner visit shares on advertising-tracker visit share, comparing recorded
 advertising-tracker labels with one imposed 1% error draw.
 
+## Regression-inference simulation
+
+`regression_inference_draws.csv` and `regression_inference_summary.csv` under
+`data/results/` come from `scripts/regression_inference.R`. Six fixed panels
+cross 200 or 800 records with diffuse 200-item loadings, concentrated 200-item
+loadings, or 30-item loadings. Each panel has 1,000 repeated predictions and
+independent probability audits, evaluated in three regression roles. Predictions
+flip each item label independently with probability 0.15; item audit inclusion
+is 0.70. The estimand is the coefficient computed from complete labels in that
+fixed panel. The experiment does not resample a population of records.
+
+The record-HC intervals come from the uncorrected proxy regression. Item-audit
+intervals use corrected moments and the joint covariance estimator. The oracle
+uses the true conditional moment covariance and the derivative at true moments.
+Coverage counts an unavailable interval as a failure; availability is recorded
+separately. Bias and empirical SD are computed among available fits. All fits
+are available in the current simulation. The covariance and corrected moments
+are tested by exact enumeration in `tests/test_regression_inference.R`.
+
 ## Observed adult-domain classifications
 
 `adult_domains.csv.gz` is a derived extract of the public

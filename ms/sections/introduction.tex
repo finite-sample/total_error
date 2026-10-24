@@ -1,0 +1,74 @@
+\section{Introduction}
+Researchers often reuse one predicted item label across many records and
+construct several aggregates from those records. A website's content label
+can enter the browsing histories of many people; a merchant classification
+can enter many households' expenditures; a document label can contribute to
+several measures of an organization or period. The resulting totals and
+shares may become regression outcomes, covariates, or both. A mistake made
+once at the item level then appears repeatedly in the analysis.
+
+The consequences depend on the reported quantity. An error on an item used
+widely by two groups can move both groups' means while largely canceling from
+their difference. The same error can change several regression covariates
+together. If the constructed measure is an outcome, a least-squares
+coefficient is linear in its item labels. If it is a covariate, changing a
+label changes the regression's numerator and denominator. Neither the number
+of mistakes nor the number of downstream records describes these effects by
+itself.
+
+The distinction between accurate classification and accurate aggregate
+estimation is established. Quantification addresses class prevalence;
+cost quantification already allows nonnegative item weights
+\citep{forman2008,hopkins2010,vaz2019quantification}. Research on predicted
+covariates and outcomes shows that substituting predictions can change
+regression coefficients and inference
+\citep{fong2021predictions,wang2020postprediction}.
+Classification followed by aggregation into regression indices is also
+covered by recent generated-variable work
+\citep{battaglia2025generated,christensen2026guide}. The present question is
+how those inferential claims change when an uncertain item supplies parts of
+many regression observations and several constructed variables.
+
+Two other literatures clarify this question. Generated-regressor and
+measurement-error methods account for estimated calibration, correlated
+errors, and uncertainty in multiple estimation stages
+\citep{pagan1984,murphy1985twostep,shaw2021correlated,boe2024sandwich}.
+Shared-source inference explains why records with overlapping loadings need
+not provide independent information
+\citep{adao2019,borusyak2022shiftshare,owen2012arrays}. These results require
+particular centering, sampling, or shock-assignment assumptions. A common
+covariance structure alone does not establish those assumptions for
+classification errors. Conversely, a biased coefficient does not imply an
+inconsistent standard error: generated-covariate models include regimes in
+which conventional robust SEs estimate variability correctly but ignore
+first-order centering bias \citep{christensen2026guide,battaglia2025generated}.
+
+I formalize reuse by matrices mapping item labels into record-level measures.
+This representation yields the error in a linear estimate, the joint
+covariance across estimates, and the normal-equation distortion when an
+aggregate is a regression covariate. It also identifies the validation unit.
+Verifying one item can correct pieces of many records without revealing any
+record's complete covariate. Existing validation-sample regression methods,
+survey difference estimators, and prediction-powered inference provide
+correction principles
+\citep{shepherd2012audit,lumley2011calibration,angelopoulos2023ppi,egami2023,
+kluger2025imputed}. Applying them here requires preserving that item-level
+construction, including label pairs in quadratic regression moments.
+
+The baseline target is the coefficient that complete labels would produce
+in the observed panel. For an existing probability sample of verified items,
+I give moment corrections and an estimable joint covariance, then state the
+conditions needed to propagate them into regression SEs. The corrections use
+standard finite-population methods, including the treatment of quadratic
+totals \citep{sitter2002quadratic}. Their exact unbiasedness does not guarantee
+normal coefficient intervals. I also show what is lost when verified errors
+are reduced to confusion counts and distinguish these fixed-label results
+from population interpretations based on calibrated conditional means.
+
+Simulations compare coefficient bias, empirical variability, estimated SEs,
+and interval coverage for aggregates used on either or both regression sides.
+A June 2022 YouGov browsing sample supplies an empirical illustration of
+reuse and visit concentration. Its imposed errors are controlled examples,
+not estimates of a fitted classifier's performance. A separate comparison of
+observed adult-domain classifications shows how actual label disagreement
+changes weighted shares without treating either classifier as verified truth.

@@ -1,6 +1,5 @@
-\section{Observed disagreement between domain classifiers}\label{sec:adult}
-The imposed-error experiment controls the number and locations of mistakes. A
-separate comparison uses observed outputs from the adult-domain study of
+\subsection{Observed disagreement between domain classifiers}\label{sec:adult}
+A separate comparison uses observed outputs from the adult-domain study of
 \citet{sood2024holier}. Its public domain summary records \AdultVisits{} visits
 to \AdultDomains{} domains in the June 2022 YouGov panel. The study used a
 Piedomains rule that marks a domain when its predicted class is ``porn'' and
@@ -55,12 +54,11 @@ changes when the observed label pairs of the most-visited domains are retained.
 This isolates information discarded by a confusion table; it does not
 establish that the extreme allocations are plausible classifier errors.
 
-This is a comparison between imperfect classification systems, not an estimate
-of either system's error against verified content labels. The available
-domain-level data do not include the person--domain matrix needed to apply the
-same calculation to the adult study's partisan coefficients. A probability
-audit of domains in that matrix, with an explicit content-labeling rule, would
-support a direct validation analysis of those coefficients without assuming
-calibrated scores. The reported Piedomains class probability and the provider
-categories alone do not establish the conditional probabilities required for
-the score plug-in in Section~\ref{sec:calibration}.
+The comparison measures disagreement between classification systems whose
+categories differ. It does not estimate either system's error against
+verified content labels. The domain-level comparison does not provide
+regression SEs for individual browsing outcomes. Applying the item-audit
+correction would require compatible person--domain links, verified labels
+under a declared content rule, and the label-selection probabilities.
+The Piedomains score and provider categories alone do not establish the
+conditional probabilities required in Section~\ref{sec:calibration}.

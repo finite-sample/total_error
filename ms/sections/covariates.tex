@@ -1,69 +1,122 @@
-\section{Aggregates in regression}
-\label{sec:covariates}
-An aggregate built from predicted labels can be either a regression outcome
-or a covariate. If it is the outcome and $X$ is a fully observed, full-rank
-design, the complete-label least-squares coefficients are
-$\beta^*=ACy$, where $A=(X^{\mathsf T}X)^{-1}X^{\mathsf T}$. The
-prediction-based coefficients are $ACq$. A contrast $r^{\mathsf T}\beta^*$
-has item weights $w=C^{\mathsf T}A^{\mathsf T}r$, so its error is $w^{\mathsf T}e$.
-The count bounds and item-audit correction below apply to this contrast.
-The coefficients are descriptive for the observed frame; causal or population
-interpretations require additional assumptions.
-
-If the aggregate is a covariate, the coefficient is nonlinear in the labels.
-The same is true of a proportion whose denominator depends on predicted
-labels. The linear bounds below do not apply to these quantities without
-evaluating their full downstream map.
-
-For example, let $Y$ be an observed outcome and $V$ a full-rank matrix of
-fully observed controls, including an intercept. The coefficient that
-ordinary least squares would report with complete item labels is
-\begin{equation}\label{eq:truecovariate}
- \beta(y)=\frac{T^{\mathsf T}M_VY}{T^{\mathsf T}M_VT}
- =\frac{y^{\mathsf T}C^{\mathsf T}M_VY}
-        {y^{\mathsf T}C^{\mathsf T}M_VCy},
- \qquad M_V=I-V(V^{\mathsf T}V)^{-1}V^{\mathsf T},
+\section{Regression coefficients and their uncertainty}\label{sec:covariates}
+\subsection{An aggregate used as the outcome}
+With a fully observed, full-rank design $X$, let
+$A=(X^{\mathsf T}X)^{-1}X^{\mathsf T}$. Regressing an aggregate outcome
+$Cy$ on $X$ gives $\beta_y=ACy$; using $Cq$ gives $\beta_q=ACq$. Hence
+\begin{equation}\label{eq:outcomeregression}
+\beta_q-\beta_y=ACe,\qquad
+\E[\beta_q-\beta_y]=ACb,\qquad
+\Cov(\beta_q-\beta_y)=AC\Sigma C^{\mathsf T}A^{\mathsf T},
 \end{equation}
-when the denominator is positive. Both numerator and denominator change
-when labels change, so ordinary attenuation is not a general conclusion.
-The exact error identity and item-audit moment formulas are in
-Appendix~\ref{app:covariates}. Those formulas do not provide an interval for
-$\beta(y)$: a ratio of estimated moments can be biased, unstable, or
-undefined.
+where $b=\E[e]$ and $\Sigma=\Cov(e)$ refer to a stated prediction-error
+process conditional on the fixed panel. A coefficient contrast has item
+weights $w=C^{\mathsf T}A^{\mathsf T}r$. Equations~\eqref{eq:contrast} and
+\eqref{eq:outcomeregression} therefore cover outcome-regression coefficients
+as well as means and group comparisons.
 
-\citet{fong2021predictions} study regression with predicted covariates, and
-\citet{battaglia2025generated} include indices built by classification and
-aggregation. This paper's item-to-record map makes the unit of validation
-explicit: verifying item $j$ may correct pieces of many regression rows,
-without revealing any row's complete covariate. Work using validated complete
-regression rows, including \citet{kluger2025imputed}, requires a different
-sampling unit or an adaptation here. Overlap in $C$ has the common-shock
-structure of shift-share designs \citep{adao2019}. It can matter in either
-direction for a coefficient. An item
-with the same weight in every unit affects their totals, but its error disappears
-from a regression with an intercept because $M_VC_{\cdot j}=0$.
+Even independent errors on distinct items need not give independent errors
+across records. If $\Sigma=\operatorname{diag}(v_j)$,
+\begin{equation}\label{eq:mainreusecov}
+\Cov(d_i,d_\ell)=\sum_jc_{ij}c_{\ell j}v_j.
+\end{equation}
+The same item shock appears wherever its loading is nonzero. A record-level
+variance calculation that discards these covariances can be too small for
+positive averages or too large for signed contrasts. The exact direction
+depends on the coefficient's item weights, not just item popularity.
+This is the common-source structure studied in shift-share inference;
+its identification and asymptotic assumptions still need to hold in the
+particular application \citep{adao2019,borusyak2022shiftshare}.
 
-There is also a generated-regressor issue beyond the covariance of the rows.
-The OLS numerator is linear in the labels but its denominator contains
-$G=C^{\mathsf T}M_VC$, including cross-products of items that enter the
-same units after residualizing on controls. Appendix~\ref{app:covariates} gives the exact
-plug-in score and its expectation under a specified prediction-error process.
-If the same predictions build two or more covariates, their measurement errors
-also enter the off-diagonal cross-products of the regression's normal
-equations. In that case there need not be a single attenuation factor: an
-error shared by two covariates can move both coefficients. The relevant
-cross-products are given in Appendix~\ref{app:covariates}.
-A verified item can inform many units' aggregates. For
-equation~\eqref{eq:truecovariate}, an item audit must account for item pairs
-in the quadratic denominator; correcting each aggregate separately is not
-enough.
+Equation~\eqref{eq:outcomeregression} quantifies the label-error component.
+For a population regression that also treats the complete-label outcome as
+random, write $T=X\beta+u$. With $\Omega=\Cov(u)$ and
+$K=\Cov(u,e)$, conditional on $X,C$,
+\begin{equation}\label{eq:combinedvariance}
+\Var(\beta_q)=A\{\Omega+C\Sigma C^{\mathsf T}
+                 +KC^{\mathsf T}+CK^{\mathsf T}\}A^{\mathsf T}.
+\end{equation}
+The cross terms vanish under additional restrictions such as independence
+of $u$ and $e$. Estimating only $C\Sigma C^{\mathsf T}$ does not estimate
+this whole variance. Corrections for predicted outcomes must specify the
+relationship between the observed outcome, its prediction, and the downstream
+regressors \citep{wang2020postprediction}.
 
-A model-based target requires different assumptions. If information
-$\mathcal H$ contains $C,V$ and the prediction inputs, and
-$p_j=\E[y_j\mid\mathcal H]$, then $Cp=\E[T\mid\mathcal H]$.
-Under $Y=V\gamma+\beta T+\varepsilon$ with
-$\E[\varepsilon\mid\mathcal H]=0$ and a full-rank design, regressing $Y$
-on $(V,Cp)$ identifies the population $\beta$. Marginal score calibration
-across items does not establish these conditional means or the exclusion
-assumption. This population coefficient is also distinct from the fixed-sample
-complete-label coefficient in equation~\eqref{eq:truecovariate}.
+\subsection{An aggregate used as a covariate}
+Let $Y$ be an observed outcome and let $V$ be fully observed controls,
+including an intercept. Put $M_V=I-V(V^{\mathsf T}V)^{-1}V^{\mathsf T}$.
+The complete-label coefficient on $T=Cy$ is
+\begin{equation}\label{eq:truecovariate}
+\beta(y)=\frac{y^{\mathsf T}C^{\mathsf T}M_VY}
+                    {y^{\mathsf T}C^{\mathsf T}M_VCy}
+        =\frac{N(y)}{D(y)},\qquad D(y)>0.
+\end{equation}
+For $t=M_VCy$, $h=M_VCe$, and $u=M_VY-\beta(y)t$, the exact change is
+\begin{equation}\label{eq:covariateerror}
+\beta(q)-\beta(y)=
+\frac{h^{\mathsf T}u-\beta(y)
+          \{t^{\mathsf T}h+h^{\mathsf T}h\}}
+     {(t+h)^{\mathsf T}(t+h)},
+\end{equation}
+provided the predicted covariate has positive residual variation.
+The denominator changes as well as the numerator, and the linear and
+quadratic error terms need not have the same sign. Ordinary attenuation is
+therefore not a general description.
+
+For small perturbations, the coefficient's item gradient is
+\begin{equation}\label{eq:regressiongradient}
+\lambda=\frac{C^{\mathsf T}M_VY-2\beta(y)C^{\mathsf T}M_VCy}{D(y)}.
+\end{equation}
+Thus $\lambda^{\mathsf T}b$ and $\lambda^{\mathsf T}\Sigma\lambda$ are
+first-order bias and variance expressions only when the remainder in
+equation~\eqref{eq:covariateerror} is negligible on the relevant scale.
+They are not feasible SEs unless the unknown labels and error moments can
+be replaced by sufficiently accurate estimates. Weak residual variation in
+$Cy$, or a few influential items, can make the linear approximation poor.
+
+These are generated-covariate problems in the sense of
+\citet{fong2021predictions}, \citet{battaglia2025generated}, and
+\citet{christensen2026guide}. Reuse makes their input construction and
+validation unit explicit. A verified item changes pieces of several rows;
+it usually does not reveal any row's complete covariate. Results based on
+validated complete rows require an adaptation or a different validation
+design \citep{kluger2025imputed}. An item with the same loading in every
+row has $M_VC_{\cdot j}=0$, so its error cancels from this coefficient even
+if it dominates unadjusted totals.
+
+\subsection{Several constructed variables}
+If both regression sides use the same predictions, the numerator in
+equation~\eqref{eq:truecovariate} becomes
+$y^{\mathsf T}C_1^{\mathsf T}M_VC_0y$. Shared errors now affect both
+regressor--outcome and regressor--regressor cross-products. For constructed
+covariates $C_ry$, the repeated-prediction error cross-product is
+\begin{equation}\label{eq:maincrossnormal}
+\E[d_r^{\mathsf T}M_Vd_s]
+=b^{\mathsf T}C_r^{\mathsf T}M_VC_sb
+ +\operatorname{tr}(C_r^{\mathsf T}M_VC_s\Sigma).
+\end{equation}
+It can be nonzero with independent item errors. Correcting the marginal
+error of each constructed variable does not determine these joint terms.
+Correlated outcome and exposure errors are already studied in measurement
+error models \citep{shaw2021correlated}; here their relationship follows
+from the shared item labels and the two loading matrices.
+
+\subsection{Conditions for standard-error interpretations}
+Bias, variability, and coverage must be assessed separately. Some
+generated-covariate asymptotic regimes have consistent conventional robust
+SEs but a biased limiting distribution around the desired coefficient
+\citep{christensen2026guide,battaglia2025generated}. Reuse does not rule out
+such a regime. It requires checking its laws of large numbers, central limit
+conditions, and variance-estimation assumptions for the actual loadings.
+
+For a linear estimate with independent item errors, put
+$s^2=\sum_jw_j^2v_j$. The sufficient Lindeberg condition
+$\max_j|w_j|/s\to0$ gives a normal limit for centered label error. It need
+not hold as the number of records grows: those records may continue to load
+on the same few uncertain items. Even a small maximum variance share is
+insufficient when errors become rare (Appendix~\ref{app:prediction}).
+Clustering by record does not recover cross-record item covariance, while
+assigning each record one item cluster omits its other memberships.
+Resampling must preserve the sources that the inferential model treats as
+random \citep{owen2012arrays}. Shared classifier fitting can additionally
+correlate errors on distinct items; that is a separate mechanism from
+reusing one item's error.

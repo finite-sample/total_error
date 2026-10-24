@@ -1,0 +1,145 @@
+\section{Validation information and feasible inference}\label{sec:inference}
+\subsection{An existing probability sample of items}\label{sec:audit}
+Suppose predictions are frozen before items are selected for verification.
+The audit observes $y_j$ for selected items, with known inclusion
+probabilities. This is one source of inference about the complete-label
+panel coefficient. It does not require optimal selection or calibrated
+scores, but it does require correctly verified labels and a known design.
+Audit-based regression correction predates current surrogate-assisted
+methods \citep{shepherd2012audit}; survey calibration and design-based
+supervised learning provide related estimating-function constructions
+\citep{lumley2011calibration,egami2023}.
+
+For a linear target, let $R_j$ indicate verification and let
+$\pi_j=\Pr(R_j=1)>0$. The difference estimator is
+\begin{equation}\label{eq:mainauditlinear}
+\widetilde\theta=w^{\mathsf T}q+
+             \sum_j\frac{R_j}{\pi_j}w_j(y_j-q_j).
+\end{equation}
+It is design unbiased for $w^{\mathsf T}y$. For several targets, replace
+$w_j$ by its vector of weights across targets. This preserves the joint
+correction contributed by one verified item. The exact design covariance
+uses the first- and second-order inclusion probabilities, not a separate
+error draw for each downstream record (Appendix~\ref{app:validation}).
+
+\subsection{Regression moments and their joint covariance}
+For a constructed covariate, equation~\eqref{eq:truecovariate} has a linear
+numerator and quadratic denominator. If both regression sides are
+constructed, both moments are quadratic. More generally, each component of
+the normal equations has form
+$m_s(y)=a_s^{\mathsf T}y+y^{\mathsf T}G_sy$, with $G_s$ symmetric.
+Writing $r=y-q$ gives
+\begin{equation}\label{eq:polynomialaudit}
+\boldsymbol m(y)=\boldsymbol m(q)+\sum_{A\in\mathcal A}c_A,
+\qquad
+\widehat{\boldsymbol m}=\boldsymbol m(q)+
+                 \sum_{A\in\mathcal A}\frac{R_A}{p_A}c_A,
+\end{equation}
+where $\mathcal A$ contains singleton items and unordered item pairs,
+$R_A=\prod_{j\in A}R_j$, and $p_A=\Pr(R_A=1)>0$. The $s$th singleton
+contribution is $r_j\{a_{sj}+2(G_sq)_j\}+G_{s,jj}r_j^2$; the pair
+contribution for $j<\ell$ is $2G_{s,j\ell}r_jr_\ell$. Both are observed
+whenever their items are verified. Quadratic finite-population totals can
+be treated as totals on such a derived population \citep{sitter2002quadratic}.
+
+\begin{proposition}[Joint audit moments]\label{prop:momentcovariance}
+Conditional on the panel and frozen predictions,
+$\E_R[\widehat{\boldsymbol m}]=\boldsymbol m(y)$. If every relevant
+$p_{A\cup B}$ is known and positive, an unbiased estimator of its covariance is
+\begin{equation}\label{eq:polynomialvariance}
+\widehat V=
+\sum_{A,B\in\mathcal A}
+\frac{R_{A\cup B}(p_{A\cup B}-p_Ap_B)}
+     {p_Ap_Bp_{A\cup B}}\,c_Ac_B^{\mathsf T}.
+\end{equation}
+Thus quadratic regression moments require inclusion probabilities for
+sets of up to four items.
+\end{proposition}
+\begin{proof}
+Each term in equation~\eqref{eq:polynomialaudit} has expectation $c_A$.
+The covariance of the $A$ and $B$ terms is
+$(p_{A\cup B}-p_Ap_B)c_Ac_B^{\mathsf T}/(p_Ap_B)$.
+Multiplication by $R_{A\cup B}/p_{A\cup B}$ gives an unbiased estimate of
+each term.
+\end{proof}
+This is a Horvitz--Thompson covariance calculation, applied jointly to the
+regression moments. It does not introduce a new regression estimator.
+Independent Bernoulli item sampling gives a particularly simple
+implementation because disjoint item sets have zero covariance;
+Appendix~\ref{app:momentvariance} gives the expression used below.
+
+For $\beta=N/D$, the gradient of the regression map is
+$g=(1/D,-N/D^2)^{\mathsf T}$. A feasible delta SE uses
+\begin{equation}\label{eq:auditratiose}
+\widehat\beta=\widehat N/\widehat D,\qquad
+\widehat{\operatorname{se}}(\widehat\beta)
+=\{\widehat g^{\mathsf T}\widehat V\widehat g\}^{1/2}.
+\end{equation}
+A normal interval is justified when the joint moments have a normal
+approximation, the denominator stays sufficiently far from zero, the
+linearization remainder is negligible, and the estimated variance is
+consistent on the coefficient's variance scale. With several constructed
+covariates, the moment vector includes all regressor--outcome and
+regressor--regressor products; the derivative of the full regression map
+must be applied to their joint covariance.
+
+These conditions do not follow from unbiasedness of either moments or
+covariance. In a finite audit, $\widehat D$ can be nonpositive and an
+unbiased covariance estimate can be indefinite. Such draws do not support
+the stated Wald SE. A few influential items can also leave a nonnormal
+coefficient distribution even when the covariance formula is exact.
+Section~\ref{sec:simulation} evaluates both SE estimation and coverage,
+including these failures.
+
+A finite-sample alternative starts with a confidence set $\mathcal Y_A$
+for the complete label vector, such as the simultaneous count certificate
+in Appendix~\ref{app:validation}. On its coverage event,
+\[
+\beta(y)\in\{\beta(z):z\in\mathcal Y_A,\ D(z)>0\}.
+\]
+The coverage implication holds for any fixed downstream map; it is the
+usual projection of a confidence set, also used in prediction-powered
+inference \citep{angelopoulos2023ppi}. Computing useful nonlinear endpoints
+and handling possible rank failures are additional tasks. The resulting
+set may be very wide or unbounded.
+
+\subsection{Calibrated predictions and estimated stages}\label{sec:calibration}
+Calibration is not required for fixed-label bounds or the probability
+audit above. A score-based population interpretation needs different
+assumptions. If information $\mathcal H$ includes the loading matrices and
+controls and $p_j=\E[y_j\mid\mathcal H]$, then
+$Cp=\E[Cy\mid\mathcal H]$. Under
+$Y=V\gamma+\beta Cy+\varepsilon$, with
+$\E[\varepsilon\mid\mathcal H]=0$ and a full-rank conditional-mean design,
+regressing $Y$ on $(V,Cp)$ identifies the population $\beta$.
+Ordinary calibration across items, $\Pr(y=1\mid p=s)=s$, does not establish
+these conditional means or the exclusion restriction. Appendix~\ref{app:calibration}
+gives a weighted counterexample and separates expected aggregates from
+realized finite-item targets.
+
+Even correct conditional means do not supply the covariance of the
+remaining errors across records. Estimating calibration adds another
+estimation stage. A stacked estimating-equation covariance or a justified
+bootstrap must propagate that stage together with the downstream fit
+\citep{murphy1985twostep,boe2023calibration,boe2024sandwich}.
+Methods that validate complete regression rows and permit nonuniform
+sampling offer useful precedents \citep{kluger2025imputed}; the sampled
+unit must still match the verified information available here.
+
+If uncertainty instead concerns repeated classifier fitting, the fitting
+sample and all item predictions must be varied jointly under a resampling
+scheme justified for that process. Independently perturbing each downstream
+record invents independent versions of a shared label. No known sampling
+probabilities, error model, or training experiment can be recovered from a
+convenience confusion table alone.
+
+\subsection{What counts omit}
+Exact target-item false-positive and false-negative counts constrain which
+labels can be wrong, but discard their locations in the loading matrices.
+For linear targets, Proposition~\ref{prop:bounds} gives the sharp interval
+obtained by sorting their item weights. Counts suffice within a predicted
+class only when all relevant weights are equal, or its error count is zero
+or exhaustive (Proposition~\ref{prop:sufficient}). These bounds concern
+identification from a summary, not a standard error. Their proof and the
+audit count certificate are in Appendices~\ref{sec:identification} and
+\ref{app:validation}.

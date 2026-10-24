@@ -1,111 +1,53 @@
 # Reused Predicted Labels in Aggregates and Regression
 
-Start with the research quantity: a total, a difference between groups, or a
-regression coefficient constructed from classified items. When the quantity is
-linear in binary item labels `y`, its target is `θ = w'y`, where `w` records each
-item's influence. The items can be documents, places, websites, or other objects
-whose predicted labels are reused. The analysis conditions on fixed weights and
-gives exact error formulas, bounds, and audit results for linear targets. It
-starts with a known item-to-unit matrix `C`: the complete-label aggregate is
-`Cy`, while `Cq` uses predicted labels `q`. Different aggregations can use
-different matrices with the same `q`. The paper maps sums and proportions
-into downstream regressions
-and explains what changes for nonlinear statistics. Its decision point is after
-the data and predictions have been collected: what adjustments and uncertainty
-can the available validation evidence support?
+The [paper](ms/main.pdf) studies predictions reused across records and across
+constructed variables. Distinct item labels `y` generate record-level measures
+`T = Cy`; predictions `q` give `S = Cq`. One item mistake can therefore enter
+many outcomes, several covariates, and multiple reported estimates.
 
-If `e` contains item prediction errors, the estimate's error is `w'e`.
-Under a stated prediction-error process, its bias is `w'b`, its variance is
-`w'Σw`, and its mean squared error is `(w'b)² + w'Σw`. The full covariance `Σ`
-allows errors across items to be correlated. Reusing one prediction in several
-records also transmits its error to every estimate involving those records.
-Under a repeated-prediction model, this can correlate aggregate errors across
-records even when distinct item errors are independent. Correlation between
-distinct item errors is a separate assumption, not a consequence of reuse.
-When the same prediction vector builds several aggregates, their errors also
-move together: for item-weight vectors `w_r` and `w_s`, their covariance is
-`w_r'Σw_s`. A heavily used item can dominate both aggregates, while a
-difference between them can cancel its error.
+The paper follows the problem through regression. An aggregate outcome produces
+coefficient error linear in item mistakes. An aggregate covariate changes the
+regression's numerator and denominator, and constructed variables sharing labels
+also share errors in their cross-products. A common item error can create
+dependence across records even when errors on distinct items are independent.
+The paper distinguishes coefficient bias, the variance of an estimator, and
+confidence-interval coverage.
 
-When a sum or fixed-denominator proportion of predicted labels is used as a
-regression covariate, its error is the corresponding sum of item errors. The
-regression coefficient itself is nonlinear in those labels: the true covariate
-appears in both its numerator and denominator. The paper derives that
-coefficient error and the plug-in OLS score, distinguishes item-level from
-complete unit-level
-validation, and gives probability-audit corrections for the numerator and
-denominator separately. A general transformation can be evaluated over the
-labels compatible with an audit, but the linear-target bounds do not
-automatically transfer to every transformation.
-The regression discussion situates this construction alongside
-[Fong and Tyler](https://doi.org/10.1017/pan.2020.38),
-[Battaglia and coauthors](https://szymon.info/assets/pdf/BCHS.pdf),
-regression calibration, and prediction-powered inference. Battaglia and
-coauthors already study classification followed by aggregation into a
-regression index; the paper focuses on the implications of item reuse and
-item-level validation. The reuse mechanism is also familiar from
-[shift-share inference](https://www.princeton.edu/~mkolesar/papers/shift_share.pdf),
-so the covariance algebra is not claimed as a new regression method.
-The companion [fewlab](https://github.com/finite-sample/fewlab) framework
-already maps each reusable item label into unit outcomes and regression
-coefficients, and uses that map to choose labels to verify. This paper starts
-with the collected labels and predictions, and examines the corrections and
-standard errors that their validation design supports.
+The baseline target is the coefficient that complete labels would produce in
+the observed panel. An existing probability audit of items gives unbiased linear
+and quadratic regression moments and an unbiased joint covariance estimator.
+The code in `R/audit_regression.R` implements that calculation for independent
+Bernoulli item verification. Delta standard errors additionally require a
+well-behaved denominator, a joint normal approximation, and consistent variance
+estimation. These are separate from the exact finite-population moment identities.
+The paper also describes how score-based population interpretations and estimated
+calibration require different assumptions.
 
-The [paper](ms/main.pdf) characterizes the sharp range of a comparison given
-exact confusion counts and shows when those counts suffice. It distinguishes
-prediction-error covariance from uncertainty due to a randomized label audit.
-An audit can provide simultaneous finite-sample bounds, but projecting its count
-summaries can lose substantial information about weighted errors. Direct
-weighted-error estimation is the relevant comparison. These constructions use
-established quantification, survey-sampling, and statistical-auditing tools.
-The note is a validation guide for declared estimates, not a new classifier or
-regression estimator. Earlier work already treats [aggregate
-prevalence](https://doi.org/10.1111/j.1540-5907.2009.00428.x) and
-[weighted cost quantification](https://doi.org/10.1007/s10618-008-0097-y).
+A simulation covers aggregates used as outcomes, covariates, and on both sides of
+a regression. It varies record count, diffuse versus concentrated loadings, and
+the number of items. Each design has 1,000 repetitions of item predictions and
+verification. Results report coefficient bias, empirical standard deviation,
+mean estimated SE, and coverage. Item correction reduces bias in these examples,
+but normal intervals can under-cover with influential or few items. The simulation
+includes an oracle covariance comparator to separate variance estimation from
+linearization and nonnormality.
 
-The YouGov browsing analysis is one application. A user comparison
-with weights `a` and a browsing matrix `C` has `θ = a'Cy = w'y`, where `w = C'a`.
-Exposure shares first normalize the rows of `C`; regression coefficients supply
-`a` from the fixed design matrix. This analysis includes seven scanner outcomes,
-twelve demographic coefficients, visit totals and shares, and three imposed error
-fractions. It is a stress test with deliberately generated mistakes, not an
-evaluation of a trained classifier. One contrast compares three audit intervals
-on common samples. A separate calculation uses the observed user-domain matrix
-and stipulates independent, equal-variance domain errors. For the mean visit
-share, the implied prediction-error variance is 323.4 times the value obtained
-by discarding covariance across users; for signed demographic coefficients the
-ratio can lie on either side of one. This is a design diagnostic, not an
-uncertainty estimate for a fitted classifier. The same predicted domains enter
-both female and male mean visit shares. Their modeled prediction errors have
-correlation 0.987; the error variance of their difference is 1.36% of a
-calculation that treats the two group means' errors as independent. The
-[data documentation](data/README.md) states the analytic
-frame, transformations, redistribution provenance, and limits of the reference
-labels.
+Two browsing illustrations provide empirical context. The observed June 2022
+YouGov person-domain matrix shows reuse and visit concentration. Deliberately
+imposed errors illustrate confusion-count bounds and regression sensitivity;
+they do not estimate a trained classifier's accuracy. A separate comparison uses
+actual Piedomains predictions and alternate adult-domain classifications to
+measure disagreement and changes in visit-weighted shares. Neither classifier
+is treated as verified truth. The [data documentation](data/README.md) defines
+the frames and transformations.
 
-A second example uses actual Piedomains predictions and three alternate domain
-classifications from the public [adult browsing study](https://github.com/soodoku/adult).
-It compares domain agreement with visit-weighted shares and the range compatible
-with directional disagreement counts. The alternate services are reference
-classifications, not verified truth, so this example measures disagreement rather
-than classifier accuracy. Missing categories are excluded separately for each
-service. A sensitivity table retains the observed label pairs for the
-highest-visit domains and recomputes the count-compatible range for the rest.
-
-The [historical simulation](docs/sim_total_error.md) retains the original continuous-data
-example. Exact finite-enumeration tests verify binary-label propagation, sharp
-bounds, hypergeometric inversion, simultaneous audit coverage, and design-unbiased
-estimation. The rare-error example uses exact binomial probabilities.
-
-The companion [fewlab](https://github.com/finite-sample/fewlab) project uses the
-same mapping to choose which reusable labels to acquire. A probability sample
-of verified items can correct a frozen classifier's contribution to a linear
-target without assuming that the classifier is calibrated. The note derives
-that connection and distinguishes label-sampling uncertainty from prediction
-uncertainty. A score plug-in `w'p` has a conditional-mean interpretation only
-when its weighted conditional mean error is zero. Item-level conditional
-probabilities suffice; ordinary calibration averaged over items does not.
+The literature discussion connects predicted covariates and outcomes, generated
+regressors, measurement error, shared-source inference, survey estimation, and
+prediction-powered inference. The paper applies those ideas to the item-level
+construction rather than claiming a new general regression estimator. The
+companion [fewlab](https://github.com/finite-sample/fewlab) project concerns
+which reusable labels to acquire; this analysis takes the collected predictions
+and validation design as given.
 
 ## Provenance
 
@@ -176,7 +118,8 @@ make check
 
 This verifies bundled data hashes, runs all exact mathematical tests and R linting,
 regenerates the imposed-error and observed-classifier studies (including 1,000
-audit repetitions per design), the exact rare-error example, all numerical
+audit repetitions per design), the regression-inference simulations, the exact
+rare-error example, all numerical
 LaTeX inputs and figures, and the historical
 simulation, then checks bibliography syntax, compiles the PDF, and checks
 whitespace. No sibling repository, network data download, or fitted model is
@@ -205,7 +148,7 @@ promised; the mathematical tests check the substantive identities and guarantees
 
 An additional analysis refines validation strata by signed influence at a fixed audit
 budget. It distinguishes ambiguity with exactly known counts from uncertainty
-when those counts must be estimated. The normal-interval illustration is limited
-to one outcome and imposed prediction vector. The paper does not claim that count
+when those counts must be estimated. That audit comparison uses one outcome and
+imposed prediction vector. The paper does not claim that count
 projection improves on modern weighted-audit methods or that these stress tests
 establish a classifier's real-world performance.

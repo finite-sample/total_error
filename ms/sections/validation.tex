@@ -1,4 +1,4 @@
-\section{What a confusion matrix identifies}\label{sec:identification}
+\section{Sharp bounds from confusion counts}\label{sec:identification}
 A confusion matrix can be exactly correct for the target items and still fail
 to determine a downstream estimate. This is an information problem before it
 is a sampling problem. Fix the predictions $q$ and the item weights $w$
@@ -75,7 +75,7 @@ need not work for another. In browsing, error rates conditional on user
 demographics are not automatically available: the same domain can enter many
 groups.
 
-\section{What collected validation labels can support}\label{sec:audit}
+\section{Audit count bounds and linear corrections}\label{app:validation}
 An existing probability sample of verified target items can recover information
 that a confusion matrix discards; it need not have been allocated optimally.
 The construction uses established finite-population counting and audit ideas
@@ -160,7 +160,7 @@ If the same selected labels were used to fit the predictions, the frozen-proxy
 design argument also needs modification; cross-fitting or joint analysis of
 training and validation would require its own justification.
 
-\section{What calibrated scores would add}\label{sec:calibration}
+\section{Score calibration and conditional means}\label{app:calibration}
 The bounds from exact target-item confusion counts and the probability audit
 above condition on fixed predictions and labels. Neither requires calibrated
 classifier scores. The audit needs a known probability-sampling design for

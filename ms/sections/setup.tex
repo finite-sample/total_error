@@ -1,0 +1,55 @@
+\section{Items, records, and inferential targets}\label{sec:estimand}
+There are $k$ distinct items, with reference labels $y_j\in\{0,1\}$ and
+predictions $q_j\in\{0,1\}$. A known $n\times k$ matrix $C_r$ maps them into
+the $r$th record-level measure:
+\[
+T_r=C_ry,\qquad S_r=C_rq,\qquad d_r=S_r-T_r=C_re,\qquad e=q-y.
+\]
+Rows can represent people, places, organizations, or periods; columns
+represent the labeled items. Entries can be counts, durations, expenditures,
+or observed shares. An item may contribute to several rows and several
+matrices. Different aggregates therefore share the same vector $e$.
+
+For fixed record weights $a$, a linear target and its prediction-based
+estimate are
+\begin{equation}\label{eq:estimand}
+\theta=a^{\mathsf T}C_ry=w^{\mathsf T}y,\quad
+\widehat\theta=w^{\mathsf T}q,\quad w=C_r^{\mathsf T}a.
+\end{equation}
+Totals have nonnegative weights; comparisons can have signed weights.
+Proportions with observed denominators fit this expression after the
+denominators are absorbed into $C_r$. A denominator depending on unknown
+labels, a regression using $C_rq$ as a covariate, or another nonlinear
+transformation instead has error $F(C_1q,\ldots,C_Rq,Z)-F(C_1y,\ldots,C_Ry,Z)$,
+where $Z$ contains other observed inputs. For linear targets the exact error is
+\begin{equation}\label{eq:contrast}
+\Delta=\widehat\theta-\theta=w^{\mathsf T}e.
+\end{equation}
+
+For illustration, consider three records and two items with
+\[
+C=\begin{pmatrix}4&0\\1&2\\0&1\end{pmatrix},\qquad
+y=(0,1)^{\mathsf T},\qquad q=(1,1)^{\mathsf T}.
+\]
+One false positive changes the record measures from $T=(0,2,1)^{\mathsf T}$
+to $S=(4,3,1)^{\mathsf T}$. With $Z=(0,1,2)^{\mathsf T}$ and an intercept,
+regressing $T$ on $Z$ gives slope $1/2$; substituting $S$ gives $-3/2$.
+Regressing $Z$ on $T$ also gives $1/2$, while regressing $Z$ on $S$ gives
+$-9/14$. The same item mistake has different consequences in the two roles.
+
+The primary target below is a descriptive coefficient for this observed
+panel with complete item labels. The matrices, observed regressors, and
+observed outcomes are held fixed when calculating its label error.
+Uncertainty requires an additional repeated experiment. A prediction-error
+model varies $q$ through a specified fitting or prediction process while
+holding $y$ fixed. An item-validation design instead varies which fixed
+labels are verified while holding $q$ fixed. Section~\ref{sec:inference}
+uses the latter to construct feasible corrections. Neither experiment by
+itself establishes inference about a population or causal coefficient.
+
+If records are sampled as well, their sampling distribution must be stated.
+An SE conditional on frozen predictions concerns that record-sampling
+problem. It need not quantify uncertainty about the complete-label
+coefficient. The corresponding variance components can be dependent; adding
+a label-error variance to a reported regression variance is justified only
+after deriving their joint distribution.

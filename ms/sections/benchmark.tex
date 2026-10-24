@@ -1,127 +1,83 @@
-\section{Reuse and error locations in browsing data}\label{sec:benchmark}
-Domain labels are reused across people, and visits are concentrated on a few
-domains. The June 2022 YouGov Pulse/RealityMine data contain
-\BenchmarkUsers{} pseudonymized users, \BenchmarkDomains{} domains,
+\section{Applications}\label{sec:applications}
+\subsection{Reuse in a June 2022 browsing sample}\label{sec:benchmark}
+The YouGov Pulse/RealityMine browsing sample contains
+\BenchmarkUsers{} users, \BenchmarkDomains{} domains,
 \BenchmarkRecords{} user--domain records, and \BenchmarkVisits{} visits.
-The most widely used domain appears in \LargestDomainUsers{} users' records.
-One domain accounts for \LargestDomainVisitShare{}\% of visits; the most visited
-1\% of domains account for \TopOnePercentDomainVisitShare{}\%.
-We use Blacklight scanner outcomes and include domains with recorded
-scanner labels. Each user's visit shares use visits to those domains as the
-denominator.
-The scanner outcomes serve as reference labels for this exercise,
-not error-free measures of all tracking activity. The exercise makes no causal
-or population-representative claim about demographic differences.
+Domain labels recur across users, and visits are concentrated: the most
+widely used domain appears in \LargestDomainUsers{} users' records. One
+domain accounts for \LargestDomainVisitShare{}\% of visits, while the most
+visited 1\% of domains account for \TopOnePercentDomainVisitShare{}\%.
+These are properties of this observed sample, before a prediction-error
+model is introduced.
 
-We use an intercept and indicators for gender, race, education, and age groups.
-Omitted categories are Male, White,
-HS or Below, and under 25. For each of seven scanner outcomes, we
-calculate all twelve non-intercept least-squares coefficients for both visit
-totals and visit shares. Each coefficient is a fixed weighted label sum.
-Two scanner columns are counts and are dichotomized at a positive value; the
-other five are binary.
+We use seven recorded Blacklight scanner outcomes as reference labels for
+an illustration. Two count outcomes are dichotomized at a positive value;
+the other five are binary. Shares use visits to domains with recorded
+scanner labels as their denominator. The scanner labels measure recorded
+tracking behavior rather than every form of tracking. Regressions include
+an intercept and indicators for gender, race, education, and age groups;
+the omitted categories are Male, White, HS or Below, and under 25.
+Their twelve non-intercept coefficients are descriptive for this panel.
 
-Predictions are imposed, rather than produced by a fitted classifier. Within
-each true class, we randomly flip the integer part of 1\%, 5\%, or 10\% of the
-labels. We then perform two distinct exercises. First, holding those predictions
-fixed, Proposition~\ref{prop:bounds} gives the true-coefficient range compatible
-with their exact confusion counts. Second, holding the reference labels fixed,
-we rearrange the same numbers of false positives and false negatives to minimize
-or maximize the predicted coefficient. The latter asks whether two classifiers
-with identical confusion matrices can report opposing comparisons. It is a
-worst-case sensitivity analysis, not an estimate of likely classifier bias.
-Extrema are computed separately for each coefficient; a single error arrangement
-need not reverse all comparisons at once.
+To illustrate information loss from counts, we impose errors by randomly
+flipping the integer part of 1\%, 5\%, or 10\% of the domain labels within
+each reference class. At the 1\% setting, exact false-positive and
+false-negative counts leave the signs of all \BenchmarkContrasts{}
+visit-share coefficients unidentified. The bound is computed separately
+for each coefficient, so the extreme allocations need not hold jointly.
+For the female coefficient on Facebook-pixel visit share, the reference
+value is \FocalTruth{} percentage points and the random predictions differ
+by \FocalRealizedError{} percentage points. Yet their count-compatible
+range for the reference coefficient is
+$[\FocalLower{},\FocalUpper{}]$ percentage points.
+Appendix~\ref{app:browsing} reports the outcome-specific bounds.
+This calculation describes what the imposed error counts fail to exclude;
+it does not estimate a trained classifier's likely error.
 
-At the 1\% setting, exact confusion counts do not identify the sign of any
-of the \BenchmarkContrasts{} visit-share coefficients (Table~\ref{tab:browsing}).
-
-\begin{table}[htbp]
-\centering\small
-\caption{What exact confusion counts establish at 1\% imposed error in each true class}
-\label{tab:browsing}
-\input{../tabs/browsing_table}
-\par\smallskip
-\begin{minipage}{\linewidth}\footnotesize
-Each row covers twelve demographic coefficients of visit shares in the
-browsing data. ``Sign identified'' counts bounding intervals excluding zero for imposed random
-predictions. Realized error is the median absolute difference between the
-prediction-based and reference coefficients. Bound width is the median
-identification-interval width; both are in percentage points (pp). Error
-counts are rounded down within each true class. These are not sampling
-intervals.
-\end{minipage}
-\end{table}
-\FloatBarrier
-
-The realized errors from random placement are
-usually much smaller than the count-compatible ranges. For example, the
-reference female coefficient for Facebook-pixel visit share is
-\FocalTruth{} percentage points. The fixed random predictions differ by
-\FocalRealizedError{} percentage points, while their count-compatible
-interval for the reference coefficient is
-$[\FocalLower{},\FocalUpper{}]$ percentage points. Moving the same numbers
-of errors can reverse all \BenchmarkContrasts{} share-coefficient signs,
-but those placements are adversarial. These results show what the confusion
-counts fail to rule out for this frame, not what a fitted classifier is likely
-to do.
-
-The same browsing matrix gives a regression-covariate illustration. For each
-other scanner outcome, we regress its user-level visit share on the
-advertising-tracker visit share and the demographic indicators above. We hold
-the outcome labels fixed and replace only the advertising-tracker labels with
+The same observed visit matrix illustrates a constructed covariate.
+For each other scanner outcome, we regress user-level visit share on
+advertising-tracker visit share and the demographic controls. We hold the
+outcome labels fixed and replace only the advertising-tracker labels with
 the 1\% random-error draw. The third-party-cookie slope changes from
-\CompleteCovariateCoefficient{} to \ImposedCovariateCoefficient{}; across the
-six outcomes, slopes can rise or fall (Table~\ref{tab:covariate}). These are
-descriptive coefficients under one imposed draw, not estimated effects of an
-observed classifier.
+\CompleteCovariateCoefficient{} to \ImposedCovariateCoefficient{};
+the six slopes can rise or fall (Table~\ref{tab:covariate}).
+These are coefficient changes under one imposed draw. The coverage
+experiment in Section~\ref{sec:simulation} addresses the separate SE question.
 
 \begin{table}[htbp]
 \centering\small
-\caption{Imposed domain-label errors in an aggregate regression covariate}
+\caption{An aggregate covariate under imposed label errors in the browsing sample}
 \label{tab:covariate}
 \input{../tabs/covariate_table}
 \par\smallskip
 \begin{minipage}{\linewidth}\footnotesize
 Each row regresses the listed scanner outcome's user-level visit share on
-advertising-tracker visit share and demographic indicators. ``Recorded labels''
-uses the scanner's advertising-tracker labels; ``Imposed errors'' flips the
-integer part of 1\% of those domain labels within each true class in one random
-draw. Outcome labels and controls are held fixed. Coefficients are descriptive;
-the imposed errors are not an evaluation of a fitted classifier.
+advertising-tracker visit share and demographic indicators in the June 2022
+YouGov sample. Recorded labels uses the scanner's advertising-tracker labels.
+Imposed errors flips the integer part of 1\% of those domain labels within
+each reference class in one random draw. Outcome labels and controls are
+fixed. The table describes coefficient sensitivity, not repeated-sample
+uncertainty or fitted-classifier performance.
 \end{minipage}
 \end{table}
 \FloatBarrier
 
-\paragraph{How much does domain reuse matter for uncertainty?}
-The incidence matrix permits a separate diagnostic without fitting a
-classifier. Suppose each domain's prediction error is independent of the
-others and has the same variance, as under independent binary flips with an
-equal false-positive and false-negative probability. Equation~\eqref{eq:overlapratio}
-compares the prediction-error variance of a linear user statistic with a
-calculation that keeps each user's marginal error variance but discards
-covariance between users. For the mean visit share the variance ratio is
-\MeanShareVarianceRatio{}, and one domain accounts for
-\MeanShareLargestItem{}\% of the item-level variance under this model.
-The female and Black share-coefficient ratios are
-\FemaleShareVarianceRatio{} and \BlackShareVarianceRatio{}: shared domain
-errors can cancel in signed contrasts. These ratios describe the observed
-weights under stipulated errors, not uncertainty for a fitted classifier.
-More directly, the same predicted domain labels enter the female and male
-mean visit shares. Their prediction errors have correlation
-\GroupErrorCorrelation{} under the equal-variance item model. The error
-variance of the female-minus-male difference is only
-\GroupDifferenceVarianceFraction{}\% of a calculation that treats the two
-group-mean errors as independent. Skew in the domain weights produces strong
-common movement in the two means, while differencing removes much of it.
+The matrix also shows how reuse affects the label-error covariance under
+a stipulated model. Suppose distinct domain errors are independent with
+equal variance. Equation~\eqref{eq:overlapratio} compares a statistic's
+label-error variance with a calculation that keeps each user's marginal
+variance but discards covariance between users. The ratio for mean visit
+share is \MeanShareVarianceRatio{}; one domain contributes
+\MeanShareLargestItem{}\% of the item-level variance. The female and Black
+coefficient ratios are \FemaleShareVarianceRatio{} and
+\BlackShareVarianceRatio{}, respectively. The latter illustrates
+cancellation in a signed contrast.
 
-\paragraph{An audit can retain more.}
-Appendix~\ref{app:audit} evaluates count projection and direct weighted
-residual estimation on the same probability-audit draws for one declared
-coefficient. The count certificate covered that coefficient in every draw
-but never settled its sign. The direct normal intervals were narrower but
-undercovered in the smallest random design; the finite-sample Hoeffding
-baseline was wider than count projection. The exercise illustrates the
-information lost by counts and the limits of these particular intervals. It
-does not compare efficient finite-sample procedures or assess the theorem's
-simultaneous utility across the other coefficients.
+Under this same model, errors in the female and male mean visit shares
+have correlation \GroupErrorCorrelation{}. Their difference has only
+\GroupDifferenceVarianceFraction{}\% of the error variance obtained by
+treating the two group-mean errors as independent. These calculations use
+the observed loadings and an assumed error covariance. They diagnose the
+consequence of dropping reuse; they do not estimate an actual classifier's
+SE. A regression correction for actual predictions would additionally
+require the validation information described in Section~\ref{sec:inference}.

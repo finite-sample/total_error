@@ -1,0 +1,31 @@
+\section{Discussion}
+Reusing predictions changes the link between classification error and a
+reported estimate. The relevant weights depend on the comparison, controls,
+and regression role. Reuse can link errors across records and across
+constructed variables even when distinct item errors are independent.
+An outcome coefficient is linear in those errors, while a constructed
+covariate changes the regression's cross-products and denominator.
+
+This construction connects familiar inference problems. Generated-variable
+methods address coefficient centering and estimated stages; shared-source
+methods address dependence and influential loadings; validation and
+survey methods address missing verified information. Their assumptions
+must be checked for the same item-to-record map. A larger regression sample
+does not itself supply more independently labeled or verified items.
+
+For a probability audit, item and item-pair contributions give unbiased
+regression moments and an unbiased joint covariance estimate. The normal
+coefficient interval is a further approximation. The simulations show
+substantial reductions in coefficient bias but also undercoverage in
+concentrated and few-item designs. An exact covariance formula cannot
+remove a weak denominator or create a central limit theorem. Reporting
+these distinctions makes clear which correction has been justified and
+which interval interpretation remains model dependent.
+
+Confusion counts and ordinary score calibration preserve different
+information. Counts generally omit the error locations needed by a weighted
+estimate. Calibrated conditional means can support population plug-ins under
+the relevant regression assumptions, but calibration averaged over items
+does not establish those assumptions or the joint error covariance.
+The validation design and retained item identities therefore determine
+which downstream adjustments and uncertainty statements the data support.

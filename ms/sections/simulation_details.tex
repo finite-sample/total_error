@@ -1,0 +1,94 @@
+\section{Simulation construction and additional results}\label{app:simulation}
+For each panel, the observed characteristic $x_i$ is equally spaced on
+$[-1,1]$, controls are an intercept and $\sin(i)$, and item features $z_j$
+are equally spaced on $[-1.5,1.5]$. Labels are $y_j=1\{z_j>0\}$.
+Each record receives 80 multinomial visits with probabilities proportional
+to $p_j\exp(x_i z_j)$. Baseline popularity is $p_j=1$. In the concentrated
+design, $p_1=3(k-1)$, $z_1=1.5$, and $y_1=1$. The resulting visit shares
+form $C_1$. Duration shares $C_0$ reweight its columns by $\exp\{\cos(j)\}$
+and renormalize each row. The observed outcome in the covariate case is
+$Y_i=0.8(C_1y)_i+0.1x_i+0.02\cos(i)$. These numerical constants define
+the simulation rather than estimate a behavioral model.
+
+The outcome regression uses $C_1q$ as outcome and $x$ as covariate. The
+covariate regression uses the observed $Y$ as outcome and $C_1q$ as
+covariate. The both-sides regression uses $C_0q$ as outcome and $C_1q$ as
+covariate. All include the stated controls. Independent item prediction
+flips have probability 0.15, while independent audit inclusion has
+probability 0.70. Their common item indicators are reused wherever a label
+appears. Audit corrections condition on each realized prediction vector;
+their moment-unbiasedness therefore also holds when averaging over these
+prediction draws.
+
+\begin{table}[htbp]
+\centering\footnotesize
+\caption{The same simulation in panels of 200 records}
+\input{../tabs/regression_small_panel}
+\par\smallskip
+\begin{minipage}{\linewidth}\footnotesize
+Methods, repetitions, target, and columns match Table~\ref{tab:regressioninference}.
+Diffuse and concentrated designs have 200 items; few-item designs have 30.
+All displayed coefficient and SE calculations are available. Changing the
+number of records does not change the number of independently predicted or
+verified items.
+\end{minipage}
+\end{table}
+\FloatBarrier
+
+\begin{table}[htbp]
+\centering\footnotesize
+\caption{Oracle audit delta intervals in panels of 800 records}
+\input{../tabs/regression_oracle}
+\par\smallskip
+\begin{minipage}{\linewidth}\footnotesize
+The point estimate is the item-audit estimate. The SE uses its true
+conditional moment covariance and the derivative at the true moments.
+This comparator is infeasible without complete labels. Coverage can still
+depart from 95\% because the coefficient is nonlinear and the corrected
+moment distribution need not be normal. Other definitions match
+Table~\ref{tab:regressioninference}.
+\end{minipage}
+\end{table}
+\FloatBarrier
+
+\section{Computing the joint moment covariance}\label{app:momentvariance}
+For independent Bernoulli verification, let $L_j$ be the vector of
+singleton contributions in equation~\eqref{eq:polynomialaudit}, and let
+$H_{j\ell}=H_{\ell j}$ be its pair-contribution vector, with $H_{jj}=0$.
+Put $\xi_j=R_j/\pi_j-1$ and $t_j=(1-\pi_j)/\pi_j$. Expanding the audit
+error gives the orthogonal decomposition
+\[
+\widehat{\boldsymbol m}-\boldsymbol m
+=\sum_j\xi_j\nu_j+\sum_{j<\ell}\xi_j\xi_\ell H_{j\ell},
+\qquad \nu_j=L_j+\sum_{\ell\ne j}H_{j\ell}.
+\]
+Independence and centering make distinct terms uncorrelated, so the oracle
+conditional covariance is
+\[
+V=\sum_jt_j\nu_j\nu_j^{\mathsf T}
+ +\sum_{j<\ell}t_jt_\ell H_{j\ell}H_{j\ell}^{\mathsf T}.
+\]
+For a feasible calculation, define
+$\widehat L_j=R_jL_j/\pi_j$,
+$\widehat H_{j\ell}=R_jR_\ell H_{j\ell}/(\pi_j\pi_\ell)$, and
+$s_j=\widehat L_j+\sum_{\ell\ne j}\widehat H_{j\ell}$.
+Equation~\eqref{eq:polynomialvariance} reduces to
+\[
+\widehat V=\sum_j(1-\pi_j)s_js_j^{\mathsf T}
+ -\sum_{j<\ell}(1-\pi_j)(1-\pi_\ell)
+          \widehat H_{j\ell}\widehat H_{j\ell}^{\mathsf T}.
+\]
+The first term counts a pair's diagonal covariance twice, once through each
+member. The subtraction supplies the required correction. The expression
+is unbiased but need not be positive semidefinite in every audit.
+
+This decomposition also makes a normal approximation's requirements
+concrete. For a coefficient gradient $g$, the linear audit projection has
+variance $s^2=\sum_jt_j(g^{\mathsf T}\nu_j)^2$. A sufficient Lindeberg
+condition is
+$\max_j|g^{\mathsf T}\nu_j|/(\pi_js)\to0$. The pair remainder must have
+variance $\sum_{j<\ell}t_jt_\ell(g^{\mathsf T}H_{j\ell})^2=o(s^2)$.
+Variance-estimator consistency and a negligible Taylor remainder for the
+regression map are additional requirements. These conditions concern a
+sequence of panels and audits; they are not established merely by having
+many downstream records.

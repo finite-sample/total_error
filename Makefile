@@ -9,6 +9,7 @@ analysis:
 	Rscript scripts/rare_errors.R
 	Rscript scripts/refinement_study.R
 	Rscript scripts/audit_study.R
+	Rscript scripts/regression_inference.R
 
 exhibits: analysis
 	Rscript scripts/make_exhibits.R
@@ -33,6 +34,7 @@ test:
 	Rscript tests/test_audit_bounds.R
 	Rscript tests/test_audit_design.R
 	Rscript tests/test_covariate_aggregation.R
+	Rscript tests/test_regression_inference.R
 
 lint:
 	Rscript -e 'source("R/audit_bounds.R"); files <- c("docs/sim_total_error.Rmd", list.files(c("R", "scripts", "tests"), pattern = "[.]R$$", full.names = TRUE)); issues <- unlist(lapply(files, lintr::lint), recursive = FALSE); if (length(issues)) { print(issues); quit(status = 1) }'

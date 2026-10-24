@@ -9,6 +9,7 @@ audit <- read.csv("data/results/audit_summary.csv")
 rare <- read.csv("data/results/rare_errors.csv")
 adult <- read.csv("data/results/adult_comparison.csv")
 adult_head <- read.csv("data/results/adult_head_sensitivity.csv")
+regression <- read.csv("data/results/regression_inference_summary.csv")
 dir.create("tabs", showWarnings = FALSE)
 dir.create("figs", showWarnings = FALSE)
 number <- function(x, digits = 0) formatC(x, format = "f", digits = digits, big.mark = ",")
@@ -18,6 +19,13 @@ small <- subset(audit, budget == 250 & head_fraction == 0 & method == "normal")
 large <- subset(audit, budget == 2000 & head_fraction == 0.5 & method == "normal")
 adult_focal <- subset(adult, reference == "bitdefender_porn")
 stopifnot(nrow(adult_focal) == 1)
+simulation_value <- function(role, structure, method, field) {
+  keep <- regression$units == 800 & regression$role == role &
+    regression$structure == structure & regression$method == method
+  x <- regression[keep, ]
+  stopifnot(nrow(x) == 1)
+  x[[field]]
+}
 overlap_value <- function(coefficient, field) {
   x <- overlap[overlap$scale == "shares" &
                  overlap$coefficient == coefficient, ]
@@ -25,6 +33,39 @@ overlap_value <- function(coefficient, field) {
   x[[field]]
 }
 macros <- c(
+  SimulationReplications = number(unique(regression$replications)),
+  SimulationMaxMCSE = number(100 * max(regression$coverage_mcse), 1),
+  SimulationAvailability = number(100 * min(regression$availability), 1),
+  SimOutcomeDiffuseCoverage = number(100 * simulation_value(
+    "Outcome", "Diffuse", "Item audit", "coverage"
+  ), 1),
+  SimCovariateDiffuseCoverage = number(100 * simulation_value(
+    "Covariate", "Diffuse", "Item audit", "coverage"
+  ), 1),
+  SimBothDiffuseCoverage = number(100 * simulation_value(
+    "Both", "Diffuse", "Item audit", "coverage"
+  ), 1),
+  SimCovariateDiffuseNaiveBias = number(simulation_value(
+    "Covariate", "Diffuse", "Record HC", "bias"
+  ), 3),
+  SimCovariateDiffuseAuditBias = number(simulation_value(
+    "Covariate", "Diffuse", "Item audit", "bias"
+  ), 3),
+  SimCovariateConcentratedSD = number(simulation_value(
+    "Covariate", "Concentrated", "Item audit", "empirical_sd"
+  ), 3),
+  SimCovariateConcentratedSE = number(simulation_value(
+    "Covariate", "Concentrated", "Item audit", "mean_se"
+  ), 3),
+  SimCovariateConcentratedCoverage = number(100 * simulation_value(
+    "Covariate", "Concentrated", "Item audit", "coverage"
+  ), 1),
+  SimCovariateConcentratedOracleCoverage = number(100 * simulation_value(
+    "Covariate", "Concentrated", "Oracle audit", "coverage"
+  ), 1),
+  SimFewBothCoverage = number(100 * simulation_value(
+    "Both", "Few items", "Item audit", "coverage"
+  ), 1),
   BenchmarkUsers = number(metadata$users), BenchmarkDomains = number(metadata$domains),
   BenchmarkRecords = number(metadata$records), BenchmarkVisits = number(metadata$visits),
   BenchmarkContrasts = number(metadata$coefficients * metadata$outcomes),
@@ -76,6 +117,39 @@ writeLines(
   sprintf("\\newcommand{\\%s}{%s}", names(macros), macros),
   "tabs/research_results.tex"
 )
+simulation_table <- function(x, path) {
+  x <- x[order(
+    match(x$role, c("Outcome", "Covariate", "Both")),
+    match(x$structure, c("Diffuse", "Concentrated", "Few items")),
+    match(x$method, c("Record HC", "Item audit", "Oracle audit"))
+  ), ]
+  rows <- vapply(seq_len(nrow(x)), function(i) {
+    z <- x[i, ]
+    sprintf(
+      "%s & %s & %s & %.3f & %.3f & %.3f & %.1f \\\\",
+      z$role, z$structure, z$method,
+      if (abs(z$bias) < 0.0005) 0 else z$bias,
+      z$empirical_sd, z$mean_se, 100 * z$coverage
+    )
+  }, character(1))
+  writeLines(c(
+    "\\begin{tabular}{lllrrrr}", "\\toprule",
+    "Role & Loadings & Method & Bias & SD & Mean SE & Cover (\\%) \\\\",
+    "\\midrule", rows, "\\bottomrule", "\\end{tabular}"
+  ), path)
+}
+simulation_table(
+  subset(regression, units == 800 & structure != "Few items" &
+           method != "Oracle audit"), "tabs/regression_inference.tex"
+)
+simulation_table(
+  subset(regression, units == 200 & method != "Oracle audit"),
+  "tabs/regression_small_panel.tex"
+)
+simulation_table(
+  subset(regression, units == 800 & method == "Oracle audit"),
+  "tabs/regression_oracle.tex"
+)
 labels <- c(
   ddg_join_ads = "Advertising trackers", third_party_cookies = "Third-party cookies",
   canvas_fingerprinting = "Canvas fingerprinting", session_recording = "Session recording",
@@ -94,8 +168,10 @@ rows <- vapply(names(labels), function(outcome) {
 writeLines(
   c(
     "\\begin{tabular}{lrrr}", "\\toprule",
-    paste0("Scanner outcome & Sign identified & Median realized ",
-           "error (pp) & Median bound width (pp) \\\\"),
+    paste0(
+      "Scanner outcome & Sign identified & Median realized ",
+      "error (pp) & Median bound width (pp) \\\\"
+    ),
     "\\midrule", rows, "\\bottomrule", "\\end{tabular}"
   ),
   "tabs/browsing_table.tex"
@@ -180,8 +256,10 @@ for (head in c(0, 0.5)) {
 writeLines(
   c(
     "\\begin{tabular}{lrlrrrr}", "\\toprule",
-    paste0("Design & Budget & Interval & Coverage (\\%) & ",
-           "Width (pp; MCSE) & Correct sign (\\%) & Wrong sign (\\%) \\\\"),
+    paste0(
+      "Design & Budget & Interval & Coverage (\\%) & ",
+      "Width (pp; MCSE) & Correct sign (\\%) & Wrong sign (\\%) \\\\"
+    ),
     "\\midrule", rows, "\\bottomrule", "\\end{tabular}"
   ),
   "tabs/audit_table.tex"
@@ -230,11 +308,17 @@ writeLines(
 refinement <- read.csv("data/results/refinement_summary.csv")
 rows <- vapply(seq_len(nrow(refinement)), function(i) {
   x <- refinement[i, ]
-  sprintf("%d & %.1f & %.1f (%.2f) & %.1f \\\\", x$strata,
-          100 * x$known_width, 100 * x$mean_width,
-          100 * x$width_mcse, 100 * x$coverage)
+  sprintf(
+    "%d & %.1f & %.1f (%.2f) & %.1f \\\\", x$strata,
+    100 * x$known_width, 100 * x$mean_width,
+    100 * x$width_mcse, 100 * x$coverage
+  )
 }, character(1))
-writeLines(c("\\begin{tabular}{rrrr}", "\\toprule",
-             "Strata & Exact-count width (pp) & Audit width (pp; MCSE) & Coverage (\\%) \\\\",
-             "\\midrule", rows, "\\bottomrule", "\\end{tabular}"),
-           "tabs/refinement_table.tex")
+writeLines(
+  c(
+    "\\begin{tabular}{rrrr}", "\\toprule",
+    "Strata & Exact-count width (pp) & Audit width (pp; MCSE) & Coverage (\\%) \\\\",
+    "\\midrule", rows, "\\bottomrule", "\\end{tabular}"
+  ),
+  "tabs/refinement_table.tex"
+)
