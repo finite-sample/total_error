@@ -31,16 +31,16 @@ Code and history:
 \maketitle
 
 \begin{abstract}
-Researchers often estimate quantities from predicted labels: a prevalence,
-a difference between groups, or a regression coefficient. When a label is
-reused across records, its mistake can affect an estimate many times; a
-confusion matrix records how many mistakes occurred but loses their locations.
+Researchers often reuse one predicted item label in many people's aggregates,
+then compare or regress those aggregates. With skewed usage, one mistake can
+move several reported estimates together. A confusion matrix records how many
+mistakes occurred but loses their locations.
 This note asks what validation can establish about a fixed estimate built from
 such labels. For estimates linear in the labels, I give sharp bounds using
 exact confusion counts and show when those counts identify the estimate.
-A probability audit of target items yields a simultaneous count-based
-confidence certificate, while a direct audit retains the weighted residuals
-needed for a particular estimate. In a browsing-data stress test, exact error
+A probability sample of already-verified target items can provide a simultaneous
+count-based confidence certificate or a direct correction with a joint
+design covariance for several estimates. In a browsing-data stress test, exact error
 counts leave the signs of 84 group comparisons unresolved. Its user--domain
 matrix also shows how record-level independence can misstate prediction-error
 uncertainty even with independent domain errors. A separate
@@ -80,19 +80,22 @@ fixed set of target items, what does a particular validation summary actually
 establish? Reused labels and signed comparison weights make that question
 especially consequential.
 
-I answer it in three steps. First, I map each linear estimate back to its
+I answer it for an already assembled dataset, taking its predictions and
+validation protocol as given. First, I map each linear estimate back to its
 item weights and derive the smallest interval compatible with exact
 target-item confusion counts. I characterize when those counts are sufficient.
-Second, I show how a probability audit gives a simultaneous count certificate
-and why a direct weighted residual audit can retain more information for a
-declared contrast. Third, I apply the calculations to a browsing-data stress
+Second, I show how known probabilities for already-verified items give a
+simultaneous count certificate or a direct correction and joint covariance for
+declared estimates. Third, I apply the calculations to a browsing-data stress
 test and to observed disagreements among adult-domain classifiers. The latter
 is an information exercise because neither classification is adjudicated
 truth. Aggregated predicted covariates and calibrated scores are related uses
 of the same labels, but interpreting a regression slope or a score plug-in
 requires additional assumptions. The note offers a way to match validation
 evidence to the downstream estimand; it does not introduce a new classifier
-or a new regression estimator.
+or a new regression estimator. Choosing which labels to acquire in the first
+place is the focus of the companion \texttt{fewlab} project
+\citep{sood2026fewlab}.
 
 \section{Start with the estimand}\label{sec:estimand}
 Let $y_j\in\{0,1\}$ be the reference label of item $j$, for $j=1,\ldots,k$.
@@ -147,6 +150,17 @@ domain visited disproportionately by one group can be influential for that
 comparison. An error rate that weights all items equally need not describe
 either target.
 
+The same prediction vector can enter several estimates at once. Let
+$W=[w^{(1)},\ldots,w^{(R)}]$ collect the item weights for $R$ declared
+linear estimates. Their joint error is $W^{\mathsf T}e$, and under a
+repeated-prediction model its covariance is $W^{\mathsf T}\Sigma W$.
+The errors in two estimates share the same $e_j$ wherever both weights are
+nonzero. A common
+domain error may move two group means together and largely disappear from
+their difference. Appendix~\ref{app:prediction} gives their joint covariance
+under a repeated-prediction model. Retrospective correction from verified
+items is given in Section~\ref{sec:audit}.
+
 For fixed labels and a fixed fitted classifier, $\Delta$ is fixed.
 If the question instead concerns repeated training and prediction, let
 $b=\E[q-y]$ and $\Sigma=\Cov(q-y)$ under that process while holding $y,w$
@@ -170,12 +184,15 @@ alone do not justify a normal approximation.
 \input{sections/adult}
 
 \section{Implications for validation}
-For a declared linear target, exact confusion counts constrain the number of
-mistakes but generally not their weighted sum. Their sharp bounds state what
-those counts alone establish. A target-item probability audit can add
-design-based coverage; retaining sampled weighted residuals allows direct
-estimation for a chosen target. If several targets matter, their different
-weight vectors determine which error locations a common audit must preserve.
+After data collection, retain the identity of each verified item and how it
+was selected. For declared linear targets, known item inclusion probabilities
+support a joint correction and design covariance even when the validation
+allocation was inefficient. Exact confusion counts instead constrain the
+number of mistakes but generally not their weighted sum; their sharp bounds
+state what those counts alone establish. If several targets matter, their
+different weight vectors determine which error locations the validation data
+must preserve. Heavy item influence can make the covariance estimate unstable
+and a normal interval unreliable even when the design formula is unbiased.
 
 These fixed-label procedures need verified labels and, for an audit, a known
 sampling design. They do not require calibrated scores. Applying error rates
@@ -183,7 +200,8 @@ from another collection requires transport assumptions; interpreting scores
 as conditional probabilities requires stronger conditions described in
 Section~\ref{sec:calibration}. For aggregated predicted covariates, estimating
 their components does not by itself give valid inference for a regression
-slope. The browsing-specific common-rate correction and its assumptions
+slope: numerator and denominator moments, their joint uncertainty, and a
+nonvanishing denominator all matter. The browsing-specific common-rate correction and its assumptions
 appear in Appendix~\ref{app:rates}.
 
 \begingroup
@@ -344,6 +362,41 @@ item by item: a negative item can only have a positive error, and a positive
 item can only have a negative one. Mean-zero error is thus not a harmless
 default for this prediction process.
 
+For several covariates built from the same predictions, let
+$T_r=C^{(r)}y$ and $d_r=C^{(r)}e$ on the same regression rows. The
+$(r,s)$ error cross-product in their residualized normal equations has
+expectation
+\begin{equation}\label{eq:crossnormal}
+ \E[d_r^{\mathsf T}M_Vd_s]
+ =b^{\mathsf T}C^{(r)\mathsf T}M_VC^{(s)}b
+  +\operatorname{tr}\{C^{(r)\mathsf T}M_VC^{(s)}\Sigma\}.
+\end{equation}
+Even if distinct item errors are independent, the trace term contains
+$\sum_jv_j(M_VC^{(r)}_{\cdot j})^{\mathsf T}
+                  (M_VC^{(s)}_{\cdot j})$.
+One domain prediction can therefore distort the cross-product between two
+constructed regressors. If the outcome also uses these predictions, its
+measurement error contributes the analogous term
+$\E[d_r^{\mathsf T}M_Vd_0]$ to the regression numerator, with $C^{(0)}$
+building the outcome. Shared errors can then create an apparent association
+as well as distort a regressor's denominator. These terms depend on how each
+aggregation weights the same item; they need not produce scalar attenuation
+of any coefficient.
+
+More generally, let $D(y)$ collect $p$ columns of the form $C^{(r)}y$.
+With an observed outcome $Y$, the
+complete-label coefficient vector is
+\begin{equation}\label{eq:multicovariate}
+ \boldsymbol\beta(y)=B(y)^{-1}m(y),\qquad
+ m_r(y)=y^{\mathsf T}C^{(r)\mathsf T}M_VY,\qquad
+ B_{rs}(y)=y^{\mathsf T}C^{(r)\mathsf T}M_VC^{(s)}y,
+\end{equation}
+when $B(y)$ is nonsingular. The same item label enters every component of
+$m$ and $B$, so their audit uncertainty is joint. If $Y$ is also built from
+these labels, its numerator moments are quadratic too. This is the usual
+regression normal equation with its item-level construction made explicit;
+it does not prescribe one particular correction method.
+
 The fixed-sample coefficient in equation~\eqref{eq:truecovariate} has a linear
 numerator and a quadratic denominator in the item labels. Put
 $r=y-q$. Then
@@ -375,6 +428,22 @@ probabilities for sets of up to four items. The formulas identify the
 information a domain audit would have to preserve. The linear-label
 difference estimator in equation~\eqref{eq:difference} does not by itself
 correct a regression that uses $Cy$ as a covariate.
+
+For a retrospective standard error, treat $(\widehat N,\widehat D)$ as a
+joint vector of item- and item-pair Horvitz--Thompson totals. If the required
+inclusion probabilities for sets of up to four items are known and positive,
+its design covariance can be estimated from the realized audit. When $D$ is
+bounded away from zero and a normal approximation for the joint moments is
+justified, the delta-method variance for $N/D$ uses gradient
+$(1/D,-N/D^2)^{\mathsf T}$. Near a zero denominator, a ratio confidence set
+must instead respect the joint uncertainty in numerator and denominator;
+the plug-in delta standard error is unreliable. With several constructed
+regressors, the corresponding moment vector includes all residualized
+regressor--outcome and regressor--regressor cross-products, including
+equation~\eqref{eq:crossnormal}. Its covariance and the regression map must
+be propagated jointly. These are routes to inference under an observed
+probability-validation design, not a claim that an arbitrary validation set
+supports an automatic corrected standard error.
 
 
 \clearpage

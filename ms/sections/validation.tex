@@ -75,8 +75,9 @@ need not work for another. In browsing, error rates conditional on user
 demographics are not automatically available: the same domain can enter many
 groups.
 
-\section{What a target-item audit can certify}\label{sec:audit}
-A probability audit can recover information that a confusion matrix discards.
+\section{What collected validation labels can support}\label{sec:audit}
+An existing probability sample of verified target items can recover information
+that a confusion matrix discards; it need not have been allocated optimally.
 The construction uses established finite-population counting and audit ideas
 \citep{stark2008audits,shekhar2023audits}. Partition the target items using
 information known before labels are audited, then draw a fixed-size random
@@ -117,6 +118,47 @@ finite-sample Hoeffding interval in the appendix is wide in this application;
 the paper does not establish an efficient finite-sample interval or an
 optimal audit allocation. The distinction here is between preserving the
 locations of audited errors and reducing them to counts.
+
+The same collected labels can correct several estimates jointly. Let $W$
+contain their item-weight vectors, let $R_j$ indicate that item $j$ was
+verified, and let $\pi_j>0$ be its known inclusion probability. Set
+$g_j=(y_j-q_j)W_{j\cdot}^{\mathsf T}$. With predictions frozen before the
+validation sample was selected,
+\begin{equation}\label{eq:jointdirectaudit}
+ \widetilde{\boldsymbol\theta}
+ =W^{\mathsf T}q+\sum_j\frac{R_j}{\pi_j}g_j,
+ \qquad \E_R[\widetilde{\boldsymbol\theta}]=W^{\mathsf T}y.
+\end{equation}
+The item, not the person or visit, is the sampling unit. If
+$\pi_{j\ell}=\Pr_R(R_j=R_\ell=1)$ and $\pi_{jj}=\pi_j$, the exact joint
+design covariance is
+\begin{equation}\label{eq:jointauditvariance}
+ \Cov_R(\widetilde{\boldsymbol\theta})
+ =\sum_{j,\ell}
+   \frac{\pi_{j\ell}-\pi_j\pi_\ell}{\pi_j\pi_\ell}
+   g_jg_\ell^{\mathsf T}.
+\end{equation}
+If every relevant $\pi_{j\ell}>0$, replacing each summand by
+$R_jR_\ell/\pi_{j\ell}$ times that summand gives an unbiased covariance
+estimator. For independent Bernoulli item selection, only the diagonal terms
+remain, giving
+$\sum_j(1-\pi_j)(y_j-q_j)^2
+W_{j\cdot}^{\mathsf T}W_{j\cdot}/\pi_j$.
+The off-diagonal entries of this covariance describe how a single verified
+item corrects several reported estimates together. Highly influential items
+with small $\pi_j$ can leave a valid estimator with a very unstable variance
+estimate and a poor normal approximation.
+
+If validation items were chosen purposively and their inclusion probabilities
+are unknown, these design claims do not apply. One can instead state a model
+for how validation errors transfer to the target items, or report bounds under
+explicit restrictions. A confusion matrix from a convenience set does not
+identify either the target-item correction or its standard error. The
+ordinary regression standard error conditional on frozen predictions answers
+a different question; it does not include the error from unverified labels.
+If the same selected labels were used to fit the predictions, the frozen-proxy
+design argument also needs modification; cross-fitting or joint analysis of
+training and validation would require its own justification.
 
 \section{What calibrated scores would add}\label{sec:calibration}
 The bounds from exact target-item confusion counts and the probability audit

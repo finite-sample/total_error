@@ -78,6 +78,25 @@ classification error; treating visits as independent would incorrectly replace
 squared visit weights by visit counts. Even this special case induces dependence
 across users who share uncertain domains.
 
+The same predictions can build several different aggregates. If the $r$th
+aggregate uses a fixed matrix $C^{(r)}$, then
+\begin{equation}\label{eq:crossaggregate}
+ d^{(r)}=C^{(r)}e,\qquad
+ \Cov\{d^{(r)},d^{(s)}\}=C^{(r)}\Sigma C^{(s)\mathsf T}.
+\end{equation}
+For scalar estimates with item-weight vectors $w^{(r)}$, independent item
+errors yield
+$\Cov(\Delta_r,\Delta_s)=\sum_jv_jw_j^{(r)}w_j^{(s)}$.
+Thus each item contributes a rank-one term to the joint covariance of all
+estimates. A heavily weighted domain can move several reported quantities
+together; subtracting two of them can cancel its error. For a sequence of
+larger user panels, independent item errors with
+$v_j\{w_j^{(r)}\}^2$ bounded away from zero for even one item prevent the
+prediction-error variance of that estimate from vanishing. More users alone
+do not supply more independent predictions for that domain. The covariance
+statements require a repeated-prediction model; $d^{(r)}=C^{(r)}e$ remains an
+exact identity for fixed realized predictions.
+
 For a fixed linear user contrast $a^{\mathsf T}d$, equal item-error variances
 give a simple overlap diagnostic:
 \begin{equation}\label{eq:overlapratio}

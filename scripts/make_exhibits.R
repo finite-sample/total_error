@@ -1,6 +1,7 @@
 bounds <- read.csv("data/results/browsing_bounds.csv")
 metadata <- read.csv("data/results/browsing_metadata.csv")
 overlap <- read.csv("data/results/browsing_overlap.csv")
+joint <- read.csv("data/results/browsing_joint.csv")
 audit <- read.csv("data/results/audit_summary.csv")
 rare <- read.csv("data/results/rare_errors.csv")
 adult <- read.csv("data/results/adult_comparison.csv")
@@ -29,6 +30,10 @@ macros <- c(
   BlackShareVarianceRatio = number(overlap_value("race_Black", "variance_ratio"), 2),
   MeanShareLargestItem = number(
     100 * overlap_value("mean", "largest_item_variance_share"), 1
+  ),
+  GroupErrorCorrelation = number(joint$prediction_error_correlation, 3),
+  GroupDifferenceVarianceFraction = number(
+    100 * joint$difference_variance_fraction, 2
   ),
   FocalTruth = number(100 * focal$target, 3),
   FocalRealizedError = number(100 * abs(focal$uniform_estimate - focal$target), 3),

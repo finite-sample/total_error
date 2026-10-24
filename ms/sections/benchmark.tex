@@ -79,6 +79,13 @@ The female and Black share-coefficient ratios are
 \FemaleShareVarianceRatio{} and \BlackShareVarianceRatio{}: shared domain
 errors can cancel in signed contrasts. These ratios describe the observed
 weights under stipulated errors, not uncertainty for a fitted classifier.
+More directly, the same predicted domain labels enter the female and male
+mean visit shares. Their prediction errors have correlation
+\GroupErrorCorrelation{} under the equal-variance item model. The error
+variance of the female-minus-male difference is only
+\GroupDifferenceVarianceFraction{}\% of a calculation that treats the two
+group-mean errors as independent. Skew in the domain weights produces strong
+common movement in the two means, while differencing removes much of it.
 
 \paragraph{An audit can retain more.}
 Appendix~\ref{app:audit} evaluates count projection and direct weighted

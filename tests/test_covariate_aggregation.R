@@ -113,4 +113,60 @@ assert_close(sum(prediction_mass *
 assert_close(actual_variance / independent_row_variance,
              sum(item_weights^2) /
                sum(mean_weights^2 * rowSums(visits^2)))
+first_group <- c(1 / 2, 1 / 2, 0, 0, 0)
+second_group <- c(0, 0, 1 / 3, 1 / 3, 1 / 3)
+first_item_weights <- drop(crossprod(visits, first_group))
+second_item_weights <- drop(crossprod(visits, second_group))
+first_error <- drop(error_draws %*% first_item_weights)
+second_error <- drop(error_draws %*% second_item_weights)
+joint_covariance <- sum(prediction_mass *
+                          (first_error - sum(prediction_mass * first_error)) *
+                          (second_error - sum(prediction_mass * second_error)))
+assert_close(joint_covariance,
+             sum(variance * first_item_weights * second_item_weights))
+stopifnot(joint_covariance > 0)
+other_aggregation <- visits / denominator
+cross_product <- apply(error_draws, 1, function(e) {
+  drop(crossprod(visits %*% e,
+                 projection %*% (other_aggregation %*% e)))
+})
+cross_weights <- crossprod(visits, projection %*% other_aggregation)
+expected_cross_product <- drop(crossprod(
+  bias, cross_weights %*% bias
+)) + sum(diag(cross_weights) * variance)
+assert_close(sum(prediction_mass * cross_product), expected_cross_product)
+
+# A pre-existing, nonoptimized fixed-size item sample still supports a joint
+# design covariance when its first- and second-order inclusions are known.
+sample_draws <- rbind(c(1, 1, 0), c(1, 0, 1), c(0, 1, 1))
+sample_probability <- rep(1 / 3, nrow(sample_draws))
+item_inclusion <- rep(2 / 3, length(labels))
+pair_probability <- matrix(1 / 3, length(labels), length(labels))
+diag(pair_probability) <- item_inclusion
+joint_weights <- cbind(first_item_weights, second_item_weights)
+item_correction <- joint_weights * as.numeric(labels - predictions)
+joint_estimates <- t(apply(sample_draws, 1, function(selected) {
+  drop(crossprod(joint_weights, predictions)) +
+    colSums(item_correction * (selected / item_inclusion))
+}))
+centered <- sweep(joint_estimates, 2, drop(crossprod(
+  sample_probability, joint_estimates
+)))
+actual_design_covariance <- crossprod(centered * sqrt(sample_probability))
+design_covariance <- matrix(0, 2, 2)
+estimated_covariance <- matrix(0, 2, 2)
+for (j in seq_along(labels)) {
+  for (ell in seq_along(labels)) {
+    term <- (pair_probability[j, ell] - item_inclusion[j] *
+               item_inclusion[ell]) /
+      (item_inclusion[j] * item_inclusion[ell]) *
+      tcrossprod(item_correction[j, ], item_correction[ell, ])
+    design_covariance <- design_covariance + term
+    estimated_covariance <- estimated_covariance +
+      sum(sample_probability * sample_draws[, j] *
+            sample_draws[, ell] / pair_probability[j, ell]) * term
+  }
+}
+assert_close(actual_design_covariance, design_covariance)
+assert_close(actual_design_covariance, estimated_covariance)
 cat("Aggregated-covariate regression and audit moment checks passed.\n")

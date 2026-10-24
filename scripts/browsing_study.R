@@ -80,6 +80,22 @@ for (scale in c("counts", "shares")) {
 }
 write.csv(do.call(rbind, overlap), "data/results/browsing_overlap.csv",
           row.names = FALSE)
+
+female <- panel$design[, "gender_Female"]
+stopifnot(all(female %in% c(0, 1)))
+female_weights <- as.numeric(crossprod(panel$shares, female / sum(female)))
+male_weights <- as.numeric(crossprod(panel$shares,
+                                     (1 - female) / sum(1 - female)))
+female_variance <- sum(female_weights^2)
+male_variance <- sum(male_weights^2)
+joint <- data.frame(
+  female_users = sum(female), male_users = sum(1 - female),
+  prediction_error_correlation = sum(female_weights * male_weights) /
+    sqrt(female_variance * male_variance),
+  difference_variance_fraction = sum((female_weights - male_weights)^2) /
+    (female_variance + male_variance)
+)
+write.csv(joint, "data/results/browsing_joint.csv", row.names = FALSE)
 print(aggregate(
   cbind(sign_certified, reversal_possible) ~ scale + error_fraction,
   results, mean

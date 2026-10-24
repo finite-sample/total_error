@@ -7,7 +7,9 @@ item's influence. The items can be documents, places, websites, or other objects
 whose predicted labels are reused. The analysis conditions on fixed weights and
 gives exact error formulas, bounds, and audit results for linear targets. It
 also maps sums and proportions of predicted labels into downstream regressions
-and explains what changes for nonlinear statistics.
+and explains what changes for nonlinear statistics. Its decision point is after
+the data and predictions have been collected: what adjustments and uncertainty
+can the available validation evidence support?
 
 If `e` contains item prediction errors, the estimate's error is `w'e`.
 Under a stated prediction-error process, its bias is `w'b`, its variance is
@@ -17,6 +19,10 @@ records also transmits its error to every estimate involving those records.
 Under a repeated-prediction model, this can correlate aggregate errors across
 records even when distinct item errors are independent. Correlation between
 distinct item errors is a separate assumption, not a consequence of reuse.
+When the same prediction vector builds several aggregates, their errors also
+move together: for item-weight vectors `w_r` and `w_s`, their covariance is
+`w_r'Σw_s`. A heavily used item can dominate both aggregates, while a
+difference between them can cancel its error.
 
 When a sum or fixed-denominator proportion of predicted labels is used as a
 regression covariate, its error is the corresponding sum of item errors. The
@@ -36,6 +42,11 @@ regression index; the paper focuses on the implications of item reuse and
 item-level validation. The reuse mechanism is also familiar from
 [shift-share inference](https://www.princeton.edu/~mkolesar/papers/shift_share.pdf),
 so the covariance algebra is not claimed as a new regression method.
+The companion [fewlab](https://github.com/finite-sample/fewlab) framework
+already maps each reusable item label into all user outcomes and regression
+coefficients, and uses that map to choose labels to verify. This paper starts
+with the collected labels and predictions, and examines the corrections and
+standard errors that their validation design supports.
 
 The [paper](ms/main.pdf) characterizes the sharp range of a comparison given
 exact confusion counts and shows when those counts suffice. It distinguishes
@@ -61,7 +72,11 @@ and stipulates independent, equal-variance domain errors. For the mean visit
 share, the implied prediction-error variance is 323.4 times the value obtained
 by discarding covariance across users; for signed demographic coefficients the
 ratio can lie on either side of one. This is a design diagnostic, not an
-uncertainty estimate for a fitted classifier. The [data documentation](data/README.md) states the analytic
+uncertainty estimate for a fitted classifier. The same predicted domains enter
+both female and male mean visit shares. Their modeled prediction errors have
+correlation 0.987; the error variance of their difference is 1.36% of a
+calculation that treats the two group means' errors as independent. The
+[data documentation](data/README.md) states the analytic
 frame, transformations, redistribution provenance, and limits of the reference
 labels.
 

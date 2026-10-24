@@ -29,7 +29,10 @@ undefined.
 This setting intersects work on machine-generated regressors
 \citep{fong2021predictions,battaglia2025generated,kluger2025imputed}.
 \citet{battaglia2025generated} already study classification and aggregation
-into regression indices. Here a single predicted domain label is reused in
+into regression indices. \citet{kluger2025imputed} allow nonuniform sampling
+of complete regression observations; a verified domain in the present setting
+usually supplies only a piece of many observations. Here a single predicted
+domain label is reused in
 many people's indices. This creates the same overlap structure as a
 shift-share regressor \citep{adao2019}: if item errors are random, independent
 across domains, and have variances $v_j$, then the error in two people's
@@ -44,12 +47,20 @@ The OLS numerator is linear in the labels but its denominator contains
 $G=C^{\mathsf T}M_VC$, including interactions between labels of domains
 visited by the same people. Appendix~\ref{app:covariates} gives the exact
 plug-in score and its expectation under a specified prediction-error process.
+If the same predictions build two or more covariates, their measurement errors
+also enter the off-diagonal cross-products of the regression's normal
+equations. In that case there need not be a single attenuation factor: an
+error shared by two covariates can move both coefficients. The relevant
+cross-products are given in Appendix~\ref{app:covariates}.
 A verified domain can inform many units' aggregates, but usually does not
 reveal any one unit's entire covariate. Methods requiring complete covariates
 for sampled regression rows therefore need a different validation design or
-an adaptation to item-level labels. For equation~\eqref{eq:truecovariate},
-an item audit must account for item pairs in the quadratic denominator;
-correcting each aggregate separately is not enough.
+an adaptation to item-level labels. The companion \texttt{fewlab} project
+develops such an item design and analyzes a constructed covariate under its
+randomized label-acquisition process \citep{sood2026fewlab}. For
+equation~\eqref{eq:truecovariate}, an item audit must account for item pairs
+in the quadratic denominator; correcting each aggregate separately is not
+enough.
 
 A model-based target requires different assumptions. If information
 $\mathcal H$ contains $C,V$ and the prediction inputs, and
